@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import math
 from PIL import Image
-
+from collections import namedtuple
 
 def vrglow(image,pixel,color,radius):
 	transparent=np.zeros((image.shape[0],image.shape[1],4),dtype=np.uint8)
@@ -154,7 +154,9 @@ def line_pixelation(img):
 									image[indent+k+(n*height),i+j]=localcolor
 
 		if(not np.array_equal(img,image)):
-			return image
+			res_list = namedtuple('res_list','img f_json r_json')
+			res = res_list(img = image, f_json = None, r_json = None)
+			return res
 
 
 

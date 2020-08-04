@@ -3,6 +3,8 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import namedtuple
+
 
 def change_intensity(img, color, sub_color):
 	height, width, channel = img.shape
@@ -42,7 +44,9 @@ def random_patch(img):
 			for k in range(3):
 				img[i,j,k] = np.random.randint(0,256)
 
-	return img
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = img, f_json = None, r_json = None)
+	return res
 
 def form_combined_pattern(img):
 	height, width, channel = img.shape
@@ -108,7 +112,9 @@ def create_desktop_glitch_two(img):
 					generate_pattern = False
 			count += 1
 
-	return img
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = img, f_json = None, r_json = None)
+	return res
 
 
 

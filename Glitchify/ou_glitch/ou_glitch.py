@@ -8,6 +8,7 @@ import cv2
 import numpy.random as random
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import namedtuple
 
 def check_val(value):
 	if value > 255:
@@ -51,7 +52,9 @@ def dotted_lines(picture, lo = 15, hi = 35):
 				pic[py,px] = [r,g,b]
 			else:
 				break   
-	return pic   
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = pic, f_json = None, r_json = None)
+	return res
 
 def dotted_lines_radial(picture, lo = 30, hi = 60):
     pic = picture.copy()
@@ -93,7 +96,11 @@ def dotted_lines_radial(picture, lo = 30, hi = 60):
                 pic[py,px] = [r,g,b]
             else:
                 break   
-    return pic
+
+    res_list = namedtuple('res_list','img f_json r_json')
+    res = res_list(img = pic, f_json = None, r_json = None)
+    return res
+
 
 
 def square_patches(picture, lo = 2, hi = 15):
@@ -124,7 +131,10 @@ def square_patches(picture, lo = 2, hi = 15):
 			x = first_x +  random.randint(-int(width*0.1), int(width*0.1))
 			pic[y:(y+size), x:(x+size)] = color
 
-	return pic
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = pic, f_json = None, r_json = None)
+	return res
+
 
 def parallel_lines(picture, lo = 60, hi = 100):
 	pic = picture.copy()
@@ -154,4 +164,6 @@ def parallel_lines(picture, lo = 60, hi = 100):
 		cv2.line(pic, (x1,y1), (x2,y2), colors, lineThickness)
 		number_of_lines -= 1
 
-	return pic 
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = pic, f_json = None, r_json = None)
+	return res

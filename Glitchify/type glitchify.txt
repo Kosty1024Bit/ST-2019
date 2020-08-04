@@ -1,0 +1,17 @@
+1. discoloration
+2. random_patch
+3. shape			-работает, но выдаёт ошибку
+4. shader
+5. dotted_line
+6. radial_dotted_line
+7. square_patch
+8. parallel_line
+9. texture_popin
+10. regular_triangulation
+11. morse_code
+12. desktop_glitch_one
+13. desktop_glitch_two
+14. screen_tearing    	      	- не доделано
+15. stuttering
+16. line_pixelation
+17. white_square  		- пока что идеальные квадраты

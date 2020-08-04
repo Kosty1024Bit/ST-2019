@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import random
+from collections import namedtuple
 
 # in_name='bd-original-14.jpg'
 # out_name='stuttering_test.png'
@@ -24,7 +25,9 @@ def swap(image,pix1,pix2):
 	image[pix2[0],pix2[1],1]=dummyg
 	image[pix2[0],pix2[1],2]=dummyb
 
-def stutter(img,sizex,sizey):
+def stutter(res,sizex,sizey):
+	img = res.img
+
 	vstripes=int(img.shape[1]/sizex)
 	hstripes=int(img.shape[0]/sizey)
 	for k in list(range(0,img.shape[1],2*int(img.shape[1]/vstripes))):
@@ -37,18 +40,27 @@ def stutter(img,sizex,sizey):
 			for j in list(range(img.shape[1])):
 				if(i+k+int(img.shape[0]/hstripes)<img.shape[0]):
 					swap(img,[i+k,j],[i+k+int(img.shape[0]/hstripes),j])
-	return img
+
+	res_list = namedtuple('res_list','img f_json r_json')
+	t_res = res_list(img = img, f_json = None, r_json = None)
+	return t_res
 
 
-def produce_stuttering(img):
-	vdivisors=divisors(img.shape[0])
-	hdivisors=divisors(img.shape[1])
+
+def produce_stuttering(image):
+	vdivisors=divisors(image.shape[0])
+	hdivisors=divisors(image.shape[1])
 	iterations=np.random.choice(np.arange(1,5),p=[0.65,0.2,0.1,0.05])
+
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = image, f_json = None, r_json = None)
+
 	for i in list(range(iterations)):
 		sizex=random.choice(hdivisors)
 		sizey=random.choice(vdivisors)
-		img=stutter(img,sizex,sizey)
-	return img
+		res = stutter(res,sizex,sizey)
+
+	return res
 
 
 # img=np.array(cv2.imread(in_name,1))

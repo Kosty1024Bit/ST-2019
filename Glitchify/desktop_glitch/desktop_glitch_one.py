@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import numpy.random as npr
 import matplotlib.pyplot as plt
+from collections import namedtuple
 
 
 def merge(orig, img, square_width):
@@ -118,7 +119,7 @@ def create_desktop_glitch_one(orig_img):
 
 	orig_img[x0:x1,y0:y1,:] = img
 
-	return orig_img
 
-
-
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = orig_img, f_json = None, r_json = None)
+	return res

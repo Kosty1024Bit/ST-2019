@@ -13,7 +13,7 @@ import imutils
 import ou_glitch.ou_glitch as og
 from stuttering.stuttering import produce_stuttering
 from line_pixelation.line_pixelation import line_pixelation
-
+from addition_glitch import addition_glitch
 
 def get_random_color():
 	b_int = npr.randint(0,256)
@@ -47,13 +47,20 @@ def add_vertical_pattern(img):
 			img[(vertical_shift + x + 5 * segment_length)% height, y, :] = color
 			img[(vertical_shift + x + 6 * segment_length)% height, y, :] = color
 		row_count += 1
-	return img
+
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = img, f_json = None, r_json = None)
+	return res
 
 def blurring(img):
 	cp = np.copy(img)
 	cp2 = np.copy(img)
 	blur = cv2.bilateralFilter(img, 40, 100, 100)
-	return blur
+
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = blur, f_json = None, r_json = None)
+	return res
+
 
 def create_discoloration(img):
 	threshold = npr.randint(100, 140)
@@ -72,7 +79,9 @@ def create_discoloration(img):
 		r_int = npr.randint(new_intesity,256)
 		img[img[:,:,0] > threshold] = [b_int, g_int, r_int]
 
-	return img
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = img, f_json = None, r_json = None)
+	return res
 
 def triangulation(img):
 	h,w,_ = img.shape
@@ -111,7 +120,10 @@ def triangulation(img):
 
 		p = cv2.drawContours(img, [t], -1, c, -1)
 
-	return p
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = p, f_json = None, r_json = None)
+	return res
+
 
 def add_random_patches(im, lo = 3, hi = 20):
 	color = npr.randint(0, 6)
@@ -132,8 +144,9 @@ def add_random_patches(im, lo = 3, hi = 20):
 		else:
 			cv2.drawContours(im, contours,len(contours) - 1 - i , (b_int,g_int,r_int), -1)
 
-	return im
-
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = im, f_json = None, r_json = None)
+	return res
 
 def add_shapes(im, lo = 2, hi = 5):
 	h, w, _ = im.shape
@@ -163,7 +176,9 @@ def add_shapes(im, lo = 2, hi = 5):
 		c1, c2, c3 = np.random.randint(0,50),np.random.randint(0,50),np.random.randint(0,50)
 		cv2.fillConvexPoly(im, pts, color= (c1,c2,c3))
 
-	return im
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = im, f_json = None, r_json = None)
+	return res
 
 
 def add_triangles(im, lo = 1, hi = 3):
@@ -199,8 +214,9 @@ def add_triangles(im, lo = 1, hi = 3):
 
 	cv2.addWeighted(overlay, alpha, output, 1 - alpha, 0, output)
 
-	return output
-
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = output, f_json = None, r_json = None)
+	return res
 
 
 #this function returns a color blend of the overlay and the original image. angle = 0 means the overlay
@@ -209,10 +225,8 @@ def add_triangles(im, lo = 1, hi = 3):
 def gradient(img, overlay, angle = 0):
 	alpha = 1
 
-
 	img = imutils.rotate_bound(img, angle)
 	overlay = imutils.rotate_bound(overlay, angle)
-
 
 	for x in range(1, img.shape[0],10 ):
 		cv2.addWeighted(overlay[x:x+10,:,:], alpha, img[x:x+10,:,:] , 1 - alpha, 0, img[x:x+10,:,:])
@@ -291,8 +305,11 @@ def add_shaders(im, lo = 1, hi = 3):
 	############
 	a1, a2 = random.choice(angles), random.choice(angles)
 
-	return gradient(output, color_blend(im, overlay1, overlay2, a1), a2)
+	t_img = gradient(output, color_blend(im, overlay1, overlay2, a1), a2)
 
+	res_list = namedtuple('res_list','img f_json r_json')
+	res = res_list(img = t_img, f_json = None, r_json = None)
+	return res
 
 def write_files(original_img, img, is_margin_specified, filename, out, is_video, append_to_arr):
 	if append_to_arr:
@@ -301,6 +318,43 @@ def write_files(original_img, img, is_margin_specified, filename, out, is_video,
 		else:
 			original_img = cv2.resize(original_img, (new_width, new_height))
 			X_orig_list.append(original_img)
+
+	if is_margin_specified:
+		original_img[x0:x1, y0:y1, :] = img
+	else:
+		original_img = img
+
+	if not is_video:
+		if not is_output_resized:
+			cv2.imwrite(filename, original_img)
+		else:
+			original_img = cv2.resize(original_img ,(new_width, new_height))
+			cv2.imwrite(filename, original_img)
+	else:
+		if not is_output_resized:
+			out.write(original_img)
+		else:
+			original_img = cv2.resize(original_img, (new_width, new_height))
+			out.write(original_img)
+
+
+	if append_to_arr:
+		if not is_output_resized:
+			X_glitched_list.append(original_img)
+		else:
+			original_img = cv2.resize(original_img ,(new_width, new_height))
+			X_glitched_list.append(original_img)
+
+#add code
+def write_full_json_files(f_json, is_f_json, filename, out):
+	if is_f_json:
+	#write json with adres "out" and name filename
+		print("no print f_json")
+
+def write_region_json_files(r_json, is_r_json, filename, out):
+	if is_r_json:
+		#write json with adres "out" and name filename
+		print("no print f_json")
 
 	if is_margin_specified:
 		original_img[x0:x1, y0:y1, :] = img
@@ -395,6 +449,13 @@ if __name__ == '__main__':
 	parser.add_argument('-new_height', dest = 'new_height', default = 224)
 	parser.add_argument('-new_width', dest = 'new_width', default = 224)
 
+#my add code
+	parser.add_argument('-fj', '--full_json', dest = 'full_json', default = 'False')
+	parser.add_argument('-rj', '--region_json', dest = 'region_json', default = 'False')
+
+	parser.add_argument('-ofj', '--output_full_json', dest = 'output_foldername_full_json')
+	parser.add_argument('-orj', '--output_region_json', dest = 'output_foldername_region_json')
+
 
 	options = parser.parse_args()
 	global arg1, arg2, x0, y0, x1, y1, is_output_resized, new_height, new_width
@@ -413,6 +474,7 @@ if __name__ == '__main__':
 		new_height = int(options.new_height)
 		new_width = int(options.new_width)
 
+#было закоменчено, видимо не закончено
 	# if options.output_type == 'video' or options.output_type == 'Video':
 	# 	is_video = True
 	is_video = False
@@ -444,6 +506,24 @@ if __name__ == '__main__':
 
 	if not os.path.isdir(options.output_foldername):
 		os.mkdir(options.output_foldername)
+
+
+#my add code defolt output Json
+	if options.output_foldername_full_json is None:
+		options.output_foldername_full_json = "new_output_foldername_full_json"
+
+	if not os.path.isdir(options.output_foldername_full_json):
+		if options.full_json is True:
+			os.mkdir(options.output_foldername_full_json)
+
+	if options.output_foldername_region_json is None:
+		options.output_foldername_region_json = "new_output_foldername_region_json"
+
+	if not os.path.isdir(options.output_foldername_region_json):
+		if options.region_json is True:
+			os.mkdir(options.output_foldername_region_json)
+
+
 
 
 	for video_path in os.listdir(options.input_foldername):
@@ -535,7 +615,7 @@ if __name__ == '__main__':
 				# X_orig_list.append()
 				if not is_video:
 					count += 1
-
+############################################# NONE ########################################################    
 			if options.glitch_type == 'screen_tearing':
 				if is_image:
 					print("Single input image is skipped when producing screen tearing glitches")
@@ -591,139 +671,139 @@ if __name__ == '__main__':
 
 			if options.glitch_type == "desktop_glitch_one":
 				# print(img.shape)
-				new_img = create_desktop_glitch_one(img)
+				new_list = create_desktop_glitch_one(img)
 
 				output_name = str(count) + "_desktop_glitch_one.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, new_img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == "desktop_glitch_two":
-				img = create_desktop_glitch_two(img)
+				new_list = create_desktop_glitch_two(img)
 
 				output_name = str(count) + "_desktop_glitch_two.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == "discoloration":
 				# print(img.shape)
-				img = create_discoloration(img)
+				new_list = create_discoloration(img)
 
 				output_name = str(count) + "_discoloration.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
 				# cv2.imwrite(output_filename, img)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == "random_patch":
 				if is_bound_specified:
-					img = add_random_patches(img, arg1, arg2)
+					new_list = add_random_patches(img, arg1, arg2)
 				else:
-					img = add_random_patches(img)
+					new_list = add_random_patches(img)
 
 				output_name = str(count) + "_random_patch.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'shape':
 				if is_bound_specified:
-					img = add_shapes(img, arg1, arg2)
+					new_list = add_shapes(img, arg1, arg2)
 				else:
-					img = add_shapes(img)
+					new_list = add_shapes(img)
 
 				output_name = str(count) + "_shape.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'triangle':
 				if is_bound_specified:
-					img = add_triangles(img, arg1, arg2)
+					new_list = add_triangles(img, arg1, arg2)
 				else:
-					img = add_triangles(img)
+					new_list = add_triangles(img)
 
 				output_name = str(count) + "_triangle.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 
 			if options.glitch_type == 'shader':
 				if is_bound_specified:
-					img = add_shaders(img, arg1, arg2)
+					new_list = add_shaders(img, arg1, arg2)
 				else:
-					img = add_shaders(img)
+					new_list = add_shaders(img)
 
 				output_name = str(count) + "_shader.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'dotted_line':
 				if is_bound_specified:
-					img = og.dotted_lines(img, arg1, arg2)
+					new_list = og.dotted_lines(img, arg1, arg2)
 				else:
-					img = og.dotted_lines(img)
+					new_list = og.dotted_lines(img)
 
 				output_name = str(count) + "_dotted_line.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'radial_dotted_line':
 				if is_bound_specified:
-					img = og.dotted_lines_radial(img, arg1, arg2)
+					new_list = og.dotted_lines_radial(img, arg1, arg2)
 				else:
-					img = og.dotted_lines_radial(img)
+					new_list = og.dotted_lines_radial(img)
 
 				output_name = str(count) + "_radial_dotted_line.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'parallel_line':
 				if is_bound_specified:
-					img = og.parallel_lines(img, arg1, arg2)
+					new_list = og.parallel_lines(img, arg1, arg2)
 				else:
-					img = og.parallel_lines(img)
+					new_list = og.parallel_lines(img)
 
 				output_name = str(count) + "_parallel_line.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 
 			if options.glitch_type == 'square_patch':
 				if is_bound_specified:
-					img = og.square_patches(img, arg1, arg2)
+					new_list = og.square_patches(img, arg1, arg2)
 				else:
-					img = og.square_patches(img)
+					new_list = og.square_patches(img)
 
 				output_name = str(count) + "_square_patch.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 
 			if options.glitch_type == 'texture_popin':
-				img = blurring(img)
+				new_list = blurring(img)
 
 				output_name = str(count) + "_texture_popin.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
@@ -732,41 +812,50 @@ if __name__ == '__main__':
 
 
 			if options.glitch_type == 'regular_triangulation':
-				img = triangulation(img, False)
+				new_list = triangulation(img)
 
 				output_name = str(count) + "_regular_triangulation.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'morse_code':
-				img = add_vertical_pattern(img)
+				new_list = add_vertical_pattern(img)
 
 				output_name = str(count) + "_morse_code.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'stuttering':
-				img = produce_stuttering(img)
+				new_list = produce_stuttering(img)
 
 				output_name = str(count) + "_stuttering.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'line_pixelation':
-				img = line_pixelation(img)
+				new_list = line_pixelation(img)
 
 				output_name = str(count) + "_line_pixelation.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
-				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 		
+			if options.glitch_type == 'white_square':
+				new_list = addition_glitch.white_square(img)
+
+				output_name = str(count) + "_white_square.png"
+				output_filename = os.path.join(options.output_foldername, output_name)
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+				if not is_video:
+					count += 1
+
 			this_count += 1
 
 			if is_image:
