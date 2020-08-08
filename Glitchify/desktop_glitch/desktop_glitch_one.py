@@ -1,10 +1,11 @@
-import cv2  
+import cv2
 import os
 import sys
 import numpy as np
 import numpy.random as npr
 import matplotlib.pyplot as plt
-from collections import namedtuple
+
+from common_file import tree_return_class
 
 
 def merge(orig, img, square_width):
@@ -28,7 +29,7 @@ def add_single_color(patch, color, is_right_col, density, intensity):
 				if np.random.uniform() < density:
 					try:
 						patch[i,j+j2,color] = min(patch[i,j+j2,color] + np.random.randint(100, 256 * intensity), 255 * intensity)
-					except Exception as e: 
+					except Exception as e:
 						pass
 
 	return patch
@@ -71,7 +72,7 @@ def add_glitch(img, square_width):
 			for p in range(4):
 				img[:, j + p * square_width: j + (p+1)* square_width, :] = add_single_color(img[:, j + p * square_width: j + (p+1)* square_width, :], 0, 0, low_val[p], low_intensity)
 				img[:, j + p * square_width: j + (p+1)* square_width, :] = add_single_color(img[:, j + p * square_width: j + (p+1)* square_width, :], 0, 1, low_val[p], high_intensity)
-	except Exception as e: 
+	except Exception as e:
 		pass
 
 	try:
@@ -79,20 +80,20 @@ def add_glitch(img, square_width):
 			for p in range(4):
 				img[:, j + p * square_width: j + (p+1)* square_width, :] = add_single_color(img[:, j + p * square_width: j + (p+1)* square_width, :], 1, 1, low_val[p], low_intensity)
 				img[:, j + p * square_width: j + (p+1)* square_width, :] = add_single_color(img[:, j + p * square_width: j + (p+1)* square_width, :], 1, 0, low_val[p], high_intensity)
-	except Exception as e: 
+	except Exception as e:
 		pass
-		
+
 	try:
 		for j in range(0, target_width, square_width * 4):
 			for p in range(4):
 				img[:, j + p * square_width: j + (p+1)* square_width, :] = add_single_color(img[:, j + p * square_width: j + (p+1)* square_width, :], 2, 0, low_val[p], low_intensity)
 				img[:, j + p * square_width: j + (p+1)* square_width, :] = add_single_color(img[:, j + p * square_width: j + (p+1)* square_width, :], 2, 1, low_val[p], high_intensity)
-	except Exception as e: 
+	except Exception as e:
 		pass
 
 	return img
 
-def create_desktop_glitch_one(orig_img):
+def create_desktop_glitch_one(orig_img, label):
 	height, width, _ = orig_img.shape
 	x0 = npr.randint(0, int(height / 6))
 	y0 = npr.randint(0, int(width / 6))
@@ -105,7 +106,7 @@ def create_desktop_glitch_one(orig_img):
 	square_width =  np.random.randint(50, 80)
 	img = np.empty_like(copy)
 	height, width, channel = img.shape
-	img = add_glitch(img, square_width) 
+	img = add_glitch(img, square_width)
 
 	subwidth = int(width / 3)
 	subheight = int(height / 3)
@@ -120,6 +121,5 @@ def create_desktop_glitch_one(orig_img):
 	orig_img[x0:x1,y0:y1,:] = img
 
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = orig_img, f_json = None, r_json = None)
+	res = tree_return_class.TreeRet(orig_img, None, None)
 	return res

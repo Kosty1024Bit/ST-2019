@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import namedtuple
 
+from common_file import labelMe_class
+from common_file.tree_return_class import TreeRet
+
 def check_val(value):
 	if value > 255:
 		value = 255
@@ -17,18 +20,18 @@ def check_val(value):
 		value = 0
 	return value
 
-def white_square(picture, lo = 2, hi = 15):
+
+def white_square(picture, label, lo = 2, hi = 15):
 	pic = picture.copy()
 	height = pic.shape[0]
 	width = pic.shape[1]
 	number_of_patches = random.randint(lo,hi+1)
 
-	first_y = -1
-	first_x = -1
-
-	#r = int(random.uniform(0, 1)*255)
-	#g = int(random.uniform(0, 1)*255)
-	#b = int(random.uniform(0, 1)*255)
+	f_json_list = []
+	max_x = 0
+	max_y = 0
+	min_x = width
+	min_y = height
 
 	for i in range(number_of_patches):
 		size = random.randint(20,50)
@@ -36,17 +39,27 @@ def white_square(picture, lo = 2, hi = 15):
 		#green = check_val(g + random.randint(-30,30))
 		#blue = check_val(b + random.randint(-30,30))
 		color = [250,250,250]#[blue, green, red]
-		if first_y < 0:
-			first_y = random.randint(int(height*0.2), int(height*0.8))
-			first_x = random.randint(int(width*0.2), int(width*0.8))
-			pic[first_y:(first_y+size), first_x:(first_x+size)] = color
-		else:
-			y = first_y +  random.randint(-int(height*0.1), int(height*0.1))
-			x = first_x +  random.randint(-int(width*0.1), int(width*0.1))
-			pic[y:(y+size), x:(x+size)] = color
 
+		first_y = random.randint(int(height*0.2), int(height*0.8))
+		first_x = random.randint(int(width*0.2), int(width*0.8))
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = pic, f_json = None, r_json = None)
+		last_y = first_y + size
+		last_x = first_x + size
+
+		min_x = min(min_x, first_x, last_x)
+		max_x = max(max_x, first_x, last_x)
+
+		min_y = min(min_y, first_y, last_y)
+		max_y = max(max_y, first_y, last_y)
+
+		pic[first_y:(last_y), first_x:(last_x)] = color
+
+		f_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, last_y]], None, "rectangle", {})
+
+		f_json_list.append(f_shapes.to_string_form())
+
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
+
+	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])
 	return res
 

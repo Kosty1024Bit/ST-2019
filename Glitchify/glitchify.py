@@ -14,6 +14,11 @@ import ou_glitch.ou_glitch as og
 from stuttering.stuttering import produce_stuttering
 from line_pixelation.line_pixelation import line_pixelation
 from addition_glitch import addition_glitch
+import json
+
+from common_file import labelMe_class
+from common_file.tree_return_class import TreeRet
+import math
 
 def get_random_color():
 	b_int = npr.randint(0,256)
@@ -21,7 +26,7 @@ def get_random_color():
 	r_int = npr.randint(0,256)
 	return b_int, g_int, r_int
 
-def add_vertical_pattern(img):
+def add_vertical_pattern(img, label):
 	color = np.random.randint(0,256,size = 3)
 	(height, width, channel) = img.shape
 	pattern_dist = int(width * 0.01)
@@ -48,42 +53,83 @@ def add_vertical_pattern(img):
 			img[(vertical_shift + x + 6 * segment_length)% height, y, :] = color
 		row_count += 1
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = img, f_json = None, r_json = None)
+	res = TreeRet(img, None, None)
 	return res
 
-def blurring(img):
-	cp = np.copy(img)
-	cp2 = np.copy(img)
+def blurring(img, label):
 	blur = cv2.bilateralFilter(img, 40, 100, 100)
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = blur, f_json = None, r_json = None)
+	shapes = labelMe_class.Shapes(label, [[0, 0],[blur.shape[1], blur.shape[0]]], None, "rectangle", {})
+	res = TreeRet(blur, [shapes.to_string_form()], [shapes.to_string_form()])
 	return res
 
 
-def create_discoloration(img):
+def create_discoloration(image, label):
+	img = image.copy()
 	threshold = npr.randint(100, 140)
 	new_intesity = npr.randint(200, 256)
 
+	min_x = img.shape[1]
+	min_y = img.shape[0]
+
+	max_x = 0
+	max_y = 0
+
 	color = npr.randint(0, 6)
 	if color == 0:
-		img[img[:,:,2] > threshold] = [0,0,new_intesity]
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][2] > threshold:
+					img[y,x] = (0, 0, new_intesity)
+
+					min_x = min(min_x, x)
+					max_x = max(max_x, x)
+
+					min_y = min(min_y, y)
+					max_y = max(max_y, y)
+
 	elif color == 1:
-		img[img[:,:,1] > threshold] = [0,new_intesity,0]
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][1] > threshold:
+					img[y,x] = (0, new_intesity, 0)
+
+					min_x = min(min_x, x)
+					max_x = max(max_x, x)
+
+					min_y = min(min_y, y)
+					max_y = max(max_y, y)
 	elif color == 2:
-		img[img[:,:,0] > threshold] = [new_intesity,0,0]
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][0] > threshold:
+					img[y,x] = (new_intesity, 0, 0)
+
+					min_x = min(min_x, x)
+					max_x = max(max_x, x)
+
+					min_y = min(min_y, y)
+					max_y = max(max_y, y)
 	else:
 		b_int = npr.randint(new_intesity,256)
 		g_int = npr.randint(new_intesity,256)
 		r_int = npr.randint(new_intesity,256)
-		img[img[:,:,0] > threshold] = [b_int, g_int, r_int]
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][0] > threshold:
+					img[y,x] = (b_int, g_int, r_int)
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = img, f_json = None, r_json = None)
+					min_x = min(min_x, x)
+					max_x = max(max_x, x)
+
+					min_y = min(min_y, y)
+					max_y = max(max_y, y)
+
+	shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
+	res = TreeRet(img, [shapes.to_string_form()], [shapes.to_string_form()])
 	return res
 
-def triangulation(img):
+def triangulation(img, label):
 	h,w,_ = img.shape
 	grid_length = int(np.random.uniform(1.0 / 40, 1.0 / 25) * w)
 	half_grid = grid_length // 2
@@ -114,18 +160,17 @@ def triangulation(img):
 
 		mid_pt = mid_pt[[1,0]]
 
-		color = img[mid_pt[0], mid_pt[1],:]*0.85 + 0.05 * img[t[0,1], t[0,0], :] + 0.05 * img[t[1,1], t[1,0], :] + 0.05 * img[t[2,1], t[2,0], :] 
+		color = img[mid_pt[0], mid_pt[1],:]*0.85 + 0.05 * img[t[0,1], t[0,0], :] + 0.05 * img[t[1,1], t[1,0], :] + 0.05 * img[t[2,1], t[2,0], :]
 		color = np.uint8(color)
 		c = tuple(map(int, color))
 
 		p = cv2.drawContours(img, [t], -1, c, -1)
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = p, f_json = None, r_json = None)
+	res = TreeRet(img, None, None)
 	return res
 
 
-def add_random_patches(im, lo = 3, hi = 20):
+def add_random_patches(im, label, lo = 3, hi = 20):
 	color = npr.randint(0, 6)
 	imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 	ret, thresh = cv2.threshold(imgray, 127, 255, 0)
@@ -134,6 +179,15 @@ def add_random_patches(im, lo = 3, hi = 20):
 	contours.sort(key = len)
 	patch_number = np.random.randint(lo,hi+1)
 	b_int, g_int, r_int = get_random_color()
+
+	min_x = imgray.shape[1]
+	max_x = 0
+
+	min_y = imgray.shape[0]
+	max_y = 0
+
+	f_json_list = []
+
 	for i in range(patch_number):
 		if color == 0:
 			cv2.drawContours(im, contours,len(contours) - 1 - i , (0,0,250), -1)
@@ -144,24 +198,237 @@ def add_random_patches(im, lo = 3, hi = 20):
 		else:
 			cv2.drawContours(im, contours,len(contours) - 1 - i , (b_int,g_int,r_int), -1)
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = im, f_json = None, r_json = None)
+		contour = contours[len(contours) - 1 - i]
+
+		(x,y) = contour[0,0]
+		min_x_c = x
+		max_x_c = x
+
+		min_y_c = y
+		max_y_c = y
+		for point in contour:
+			(x_c, y_c) = point[0]
+
+			min_x_c = int(min(min_x_c, x_c))
+			max_x_c = int(max(max_x_c, x_c))
+
+			min_y_c = int(min(min_y_c, y_c))
+			max_y_c = int(max(max_y_c, y_c))
+
+		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
+
+		min_x = min(min_x, min_x_c)
+		max_x = max(max_x, max_x_c)
+
+		min_y = min(min_y, min_y_c)
+		max_y = max(max_y, max_y_c)
+
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
+	res = TreeRet(im, f_json_list, [r_shapes.to_string_form()])
+
 	return res
 
-def add_shapes(im, lo = 2, hi = 5):
-	h, w, _ = im.shape
-	gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+def point_two_line(x1_1,y1_1, x1_2,y1_2, x2_1,y2_1, x2_2,y2_2):
+	# составляем формулы двух прямых
+
+	x1_1 = float(x1_1)
+	y1_1 = float(y1_1)
+	x1_2 = float(x1_2)
+	y1_2 = float(y1_2)
+	x2_1 = float(x2_1)
+	y2_1 = float(y2_1)
+	x2_2 = float(x2_2)
+	y2_2 = float(y2_2)
+
+	xdiff = (x1_1 - x1_2, x2_1 - x2_2)
+	ydiff = (y1_1 - y1_2, y2_1 - y2_2)
+
+	div = det(xdiff, ydiff)
+	if div == 0:
+		return None
+
+	d = (det([x1_1,y1_1],[x1_2, y1_2]), det([x2_1,y2_1],[x2_2, y2_2]))
+	x = det(d, xdiff) / div
+	y = det(d, ydiff) / div
+
+	if (min(x1_1, x1_2) <= x <= max(x1_1, x1_2)) and (min(y2_1, y2_2) <= y <= max(y2_1, y2_2)):
+		return (x,y)
+	else:
+		return None
+
+
+def contntur_limitation(x1, y1, x2, y2, x3, y3, min_limit_x, min_limit_y, max_limit_x, max_limit_y):
+	contur = []
+
+	point_1_is_out = False
+	point_2_is_out = False
+	point_3_is_out = False
+
+	if(x1 < min_limit_x or x1 > max_limit_x or y1 < min_limit_y or y1 > max_limit_y):
+		point_1_is_out = True
+	if(x2 < min_limit_x or x2 > max_limit_x or y2 < min_limit_y or y2 > max_limit_y):
+		point_2_is_out = True
+	if(x3 < min_limit_x or x3 > max_limit_x or y3 < min_limit_y or y3 > max_limit_y):
+		point_3_is_out = True
+
+	if point_1_is_out:
+		if not point_2_is_out:
+			left_horizontal_limit  = point_two_line(x1,y1, x2,y2, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+			right_horizontal_limit = point_two_line(x1,y1, x2,y2, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+
+			bottom_vertical_limit  = point_two_line(x1,y1, x2,y2, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+			top_vertical_limit 	   = point_two_line(x1,y1, x2,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+
+			if  left_horizontal_limit is not None:
+				(x,y) = left_horizontal_limit
+			elif right_horizontal_limit is not None:
+				(x,y) = right_horizontal_limit
+			elif bottom_vertical_limit is not None:
+				(x,y) = bottom_vertical_limit
+			elif top_vertical_limit is not None:
+				(x,y) = top_vertical_limit
+			else:
+				print("ERROR POINT 2 LiNE 1.2\n", x1, " ", y1, " ", x2, " ",y2, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
+
+			contur.append([x,y])
+
+		if not point_3_is_out:
+			left_horizontal_limit  = point_two_line(x1,y1, x3,y3, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+			right_horizontal_limit = point_two_line(x1,y1, x3,y3, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+
+			bottom_vertical_limit  = point_two_line(x1,y1, x3,y3, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+			top_vertical_limit 	   = point_two_line(x1,y1, x3,y3, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+
+			if  left_horizontal_limit is not None:
+				(x,y) = left_horizontal_limit
+			elif right_horizontal_limit is not None:
+				(x,y) = right_horizontal_limit
+			elif bottom_vertical_limit is not None:
+				(x,y) = bottom_vertical_limit
+			elif top_vertical_limit is not None:
+				(x,y) = top_vertical_limit
+			else:
+				print("ERROR POINT 2 LiNE 1.3\n", x1, " ", y1, " ", x3, " ",y3, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
+
+			contur.append([x,y])
+	else:
+		contur.append([x1,y1])
+
+	if point_2_is_out:
+		if not point_1_is_out:
+			left_horizontal_limit  = point_two_line(x2,y2, x1,y1, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+			right_horizontal_limit = point_two_line(x2,y2, x1,y1, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+
+			bottom_vertical_limit  = point_two_line(x2,y2, x1,y1, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+			top_vertical_limit 	   = point_two_line(x2,y2, x1,y1, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+
+			if  left_horizontal_limit is not None:
+				(x,y) = left_horizontal_limit
+			elif right_horizontal_limit is not None:
+				(x,y) = right_horizontal_limit
+			elif bottom_vertical_limit is not None:
+				(x,y) = bottom_vertical_limit
+			elif top_vertical_limit is not None:
+				(x,y) = top_vertical_limit
+			else:
+				print("ERROR POINT 2 LiNE 2.1\n", x2, " ", y2, " ", x1, " ",y1, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
+
+			contur.append([x,y])
+
+		if not point_3_is_out:
+			left_horizontal_limit  = point_two_line(x2,y2, x3,y3, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+			right_horizontal_limit = point_two_line(x2,y2, x3,y3, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+
+			bottom_vertical_limit  = point_two_line(x2,y2, x3,y3, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+			top_vertical_limit 	   = point_two_line(x2,y2, x3,y3, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+
+			if  left_horizontal_limit is not None:
+				(x,y) = left_horizontal_limit
+			elif right_horizontal_limit is not None:
+				(x,y) = right_horizontal_limit
+			elif bottom_vertical_limit is not None:
+				(x,y) = bottom_vertical_limit
+			elif top_vertical_limit is not None:
+				(x,y) = top_vertical_limit
+			else:
+				print("ERROR POINT 2 LiNE 2.3\n", x2, " ", y2, " ", x3, " ",y3, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
+
+			contur.append([x,y])
+	else:
+		contur.append([x2,y2])
+
+	if point_3_is_out:
+		if not point_1_is_out:
+			left_horizontal_limit  = point_two_line(x3,y3, x1,y1, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+			right_horizontal_limit = point_two_line(x3,y3, x1,y1, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+
+			bottom_vertical_limit  = point_two_line(x3,y3, x1,y1, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+			top_vertical_limit 	   = point_two_line(x3,y3, x1,y1, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+
+			if  left_horizontal_limit is not None:
+				(x,y) = left_horizontal_limit
+			elif right_horizontal_limit is not None:
+				(x,y) = right_horizontal_limit
+			elif bottom_vertical_limit is not None:
+				(x,y) = bottom_vertical_limit
+			elif top_vertical_limit is not None:
+				(x,y) = top_vertical_limit
+			else:
+				print("ERROR POINT 2 LiNE 3.1\n", x3, " ", y3, " ", x1, " ",y1, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
+
+			contur.append([x,y])
+
+		if not point_2_is_out:
+			left_horizontal_limit  = point_two_line(x3,y3, x2,y2, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+			right_horizontal_limit = point_two_line(x3,y3, x2,y2, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+
+			bottom_vertical_limit  = point_two_line(x3,y3, x2,y2, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+			top_vertical_limit 	   = point_two_line(x3,y3, x2,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+			if not left_horizontal_limit is None:
+				(x,y) = left_horizontal_limit
+			elif not right_horizontal_limit is None:
+				(x,y) = right_horizontal_limit
+			elif not bottom_vertical_limit is None:
+				(x,y) = bottom_vertical_limit
+			elif not top_vertical_limit is None:
+				(x,y) = top_vertical_limit
+			else:
+				print("ERROR POINT 2 LiNE 3.2\n", x3, " ", y3, " ", x2, " ",y2, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
+
+			contur.append([x,y])
+	else:
+		contur.append([x3,y3])
+
+	return contur
+
+
+
+def add_shapes(im, label, lo = 2, hi = 5):
+	img = im.copy()
+	h, w, _ = img.shape
 
 	# Find the darkest region of the image
 	grid = (-1,-1)
-	mean_shade = np.mean(im)
+	mean_shade = np.mean(img) #у 1 картинки возникает warning в консоль, думаю тут
+
 	x_step, y_step = int(w/6), int(h/4)
 	for x in range(0, w, x_step):
 		for y in range(0, h, y_step):
-			new_shade = np.mean(im[x:x+x_step, y:y+y_step])
+			new_shade = np.mean(img[x:x+x_step, y:y+y_step])
 			if  new_shade <= mean_shade:
 				mean_shade = new_shade
 				grid = (x,y)
+
+	f_json_list = []
+	max_x = 0
+	max_y = 0
+	min_x = w
+	min_y = h
 
 	# Add shapes
 	minLoc = (np.random.randint(grid[0], min(grid[0]+x_step, w)), np.random.randint(grid[1], min(grid[1]+x_step, h)))
@@ -169,19 +436,53 @@ def add_shapes(im, lo = 2, hi = 5):
 	for i in range(num_shapes):
 		stretch = np.random.randint(40, 100)
 		diff1, diff2 = np.random.randint(-5,5), np.random.randint(-5,5)
-		x1, y1 = minLoc[0] +  diff1* stretch  , minLoc[1] + diff2 * stretch
-		x2, y2 = x1 + np.random.randint(1,12)/5 * diff1 * stretch  , y1 + np.random.randint(1,12)/5 * diff2* stretch
+		x1 = minLoc[0] + diff1 * stretch
+		y1 = minLoc[1] + diff2 * stretch
+		x2 = x1 + np.random.randint(1,12)/5 * diff1 * stretch
+		y2 = y1 + np.random.randint(1,12)/5 * diff2 * stretch
+
 		pts = np.array((minLoc, (x1, y1), (x2, y2)), dtype=int)
+		contur = contntur_limitation(minLoc[0],minLoc[1], x1,y1,x2,y2, 0,0, w-1,h-1)
+
+		(t_x1, t_y1) = contur[0]
+		t_x1 = int(math.ceil(t_x1))
+		t_y1 = int(math.ceil(t_y1))
+		temp_min_x = t_x1
+		temp_min_y = t_y1
+
+		temp_max_x = t_x1
+		temp_max_y = t_y1
+
+		for (t_x,t_y) in contur:
+			t_x = int(math.ceil(t_x))
+			t_y = int(math.ceil(t_y))
+
+			temp_min_x = min(t_x,temp_min_x)
+			temp_min_y = min(t_y,temp_min_y)
+
+			temp_max_x = max(t_x,temp_max_x)
+			temp_max_y = max(t_y,temp_max_y)
+
+		f_shapes = labelMe_class.Shapes(label, [[temp_min_x, temp_min_y], [temp_max_x, temp_max_y]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
+
+		min_x = min(min_x, temp_min_x)
+		max_x = max(max_x, temp_max_x)
+
+		min_y = min(min_y, temp_min_y)
+		max_y = max(max_y, temp_max_y)
 
 		c1, c2, c3 = np.random.randint(0,50),np.random.randint(0,50),np.random.randint(0,50)
-		cv2.fillConvexPoly(im, pts, color= (c1,c2,c3))
+		cv2.fillConvexPoly(img, pts, color= (c1,c2,c3))
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = im, f_json = None, r_json = None)
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
+	r_json_list = [r_shapes.to_string_form()]
+
+	res = TreeRet(img, f_json_list, r_json_list)
 	return res
 
 
-def add_triangles(im, lo = 1, hi = 3):
+def add_triangles(im, label, lo = 1, hi = 3):
 	h, w, _ = im.shape
 	colors = np.array((
                    (250,206,135),
@@ -204,8 +505,8 @@ def add_triangles(im, lo = 1, hi = 3):
 	for i in range(num_shapes):
 		x_1, y_1 = np.mean([x_1, x_0]) + np.random.randint(-60,60), np.mean([y_1,y_0])+ np.random.randint(-60,60)
 		x_2, y_2 = np.mean([x_2, x_0]) + np.random.randint(-60,60), np.mean([y_2,y_0])+ np.random.randint(-60,60)
-		
-		pts = np.array(((x_0, y_0), (x_1, y_1), (x_2, y_2)), dtype=int) 
+
+		pts = np.array(((x_0, y_0), (x_1, y_1), (x_2, y_2)), dtype=int)
 		# if not is_random:
 		# 	cv2.fillConvexPoly(overlay, pts, color= tuple([int(x) for x in colors[np.random.randint(3)]]) )
 
@@ -214,8 +515,7 @@ def add_triangles(im, lo = 1, hi = 3):
 
 	cv2.addWeighted(overlay, alpha, output, 1 - alpha, 0, output)
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = output, f_json = None, r_json = None)
+	res = TreeRet(output, None, None)
 	return res
 
 
@@ -254,7 +554,7 @@ def color_blend(img, overlay1, overlay2, angle = 0):
 #############################
 
 
-def add_shaders(im, lo = 1, hi = 3):
+def add_shaders(im, label, lo = 1, hi = 3):
 	angles = np.array([0,90,180,270])
 
 	h,w,_ = im.shape
@@ -291,13 +591,13 @@ def add_shaders(im, lo = 1, hi = 3):
 
 		colors[1, :] = im[mid_x,mid_y,:] + npr.randint(-30, 30, size = [3])
 
-		colors = np.clip(colors, a_min = 0, a_max = 255) 
+		colors = np.clip(colors, a_min = 0, a_max = 255)
 
 		# colors[0,:] = npr.randint(0, 256, size = 3)
 		# colors[1,:] = colors[0,:] + npr.randint(0, 100, size = 3)
 		# colors[1,:] = np.clip(colors[1,:], 0, 255)
 
-		
+
 		cv2.fillConvexPoly(overlay1, pts, color= tuple([int(x) for x in colors[0]]) )
 		cv2.fillConvexPoly(overlay2, pts, color= tuple([int(x) for x in colors[1]]) )
 
@@ -307,8 +607,7 @@ def add_shaders(im, lo = 1, hi = 3):
 
 	t_img = gradient(output, color_blend(im, overlay1, overlay2, a1), a2)
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = t_img, f_json = None, r_json = None)
+	res = TreeRet(t_img, None, None)
 	return res
 
 def write_files(original_img, img, is_margin_specified, filename, out, is_video, append_to_arr):
@@ -346,41 +645,19 @@ def write_files(original_img, img, is_margin_specified, filename, out, is_video,
 			X_glitched_list.append(original_img)
 
 #add code
-def write_full_json_files(f_json, is_f_json, filename, out):
+def write_full_json_files(f_json, is_f_json, original_name_file, filename, img):
 	if is_f_json:
-	#write json with adres "out" and name filename
-		print("no print f_json")
+		#write json with adres filename
+		write_f_json = labelMe_class.Json("0.0.0 version", {}, f_json, original_name_file, None, img.shape[0], img.shape[1])
+		with open(filename + "_full.json", "w") as write_file:
+			json.dump(write_f_json.to_string_form(), write_file, indent=4)
 
-def write_region_json_files(r_json, is_r_json, filename, out):
+def write_region_json_files(r_json, is_r_json, original_name_file, filename, img):
 	if is_r_json:
-		#write json with adres "out" and name filename
-		print("no print f_json")
-
-	if is_margin_specified:
-		original_img[x0:x1, y0:y1, :] = img
-	else:
-		original_img = img
-
-	if not is_video:
-		if not is_output_resized:
-			cv2.imwrite(filename, original_img)
-		else:
-			original_img = cv2.resize(original_img ,(new_width, new_height))
-			cv2.imwrite(filename, original_img)
-	else:
-		if not is_output_resized:
-			out.write(original_img)
-		else:
-			original_img = cv2.resize(original_img, (new_width, new_height))
-			out.write(original_img)
-
-
-	if append_to_arr:
-		if not is_output_resized:
-			X_glitched_list.append(original_img)
-		else:
-			original_img = cv2.resize(original_img ,(new_width, new_height))
-			X_glitched_list.append(original_img)
+		#write json with adres filename
+		write_r_json = labelMe_class.Json("0.0.0 version", {}, r_json, original_name_file, None, img.shape[0], img.shape[1])
+		with open(filename + "_region.json", "w") as write_file:
+			json.dump(write_r_json.to_string_form(), write_file, indent=4)
 
 
 
@@ -450,8 +727,8 @@ if __name__ == '__main__':
 	parser.add_argument('-new_width', dest = 'new_width', default = 224)
 
 #my add code
-	parser.add_argument('-fj', '--full_json', dest = 'full_json', default = 'False')
-	parser.add_argument('-rj', '--region_json', dest = 'region_json', default = 'False')
+	parser.add_argument('-fj', '--full_json', dest = 'full_json')
+	parser.add_argument('-rj', '--region_json', dest = 'region_json')
 
 	parser.add_argument('-ofj', '--output_full_json', dest = 'output_foldername_full_json')
 	parser.add_argument('-orj', '--output_region_json', dest = 'output_foldername_region_json')
@@ -468,6 +745,10 @@ if __name__ == '__main__':
 	interval = int(options.interval)
 	new_height = 224
 	new_width = 224
+
+#add code
+	is_full_json = False
+	is_region_json = False
 
 	if options.resize_output == 'True' or options.resize_output == 'true':
 		is_output_resized = True
@@ -508,19 +789,27 @@ if __name__ == '__main__':
 		os.mkdir(options.output_foldername)
 
 
+
+
 #my add code defolt output Json
+	if options.full_json is None or options.full_json == 'True' or options.full_json == 'true':
+		is_full_json = True
+
+	if options.region_json is None or options.region_json == 'True' or options.region_json == 'true':
+		is_region_json = True
+
 	if options.output_foldername_full_json is None:
-		options.output_foldername_full_json = "new_output_foldername_full_json"
+		options.output_foldername_full_json = options.output_foldername
 
 	if not os.path.isdir(options.output_foldername_full_json):
-		if options.full_json is True:
+		if is_full_json is True:
 			os.mkdir(options.output_foldername_full_json)
 
 	if options.output_foldername_region_json is None:
-		options.output_foldername_region_json = "new_output_foldername_region_json"
+		options.output_foldername_region_json = options.output_foldername
 
 	if not os.path.isdir(options.output_foldername_region_json):
-		if options.region_json is True:
+		if is_region_json is True:
 			os.mkdir(options.output_foldername_region_json)
 
 
@@ -541,7 +830,7 @@ if __name__ == '__main__':
 
 		cap = None
 		frame_width = 0
-		frame_height = 0 
+		frame_height = 0
 		out = None
 
 		if not is_image:
@@ -615,7 +904,10 @@ if __name__ == '__main__':
 				# X_orig_list.append()
 				if not is_video:
 					count += 1
-############################################# NONE ########################################################    
+############################################# NONE ########################################################
+#имя входной картинки и её типа - video_path
+
+
 			if options.glitch_type == 'screen_tearing':
 				if is_image:
 					print("Single input image is skipped when producing screen tearing glitches")
@@ -632,7 +924,7 @@ if __name__ == '__main__':
 						new_img = img
 						write_files(original_img, new_img, is_margin_specified, output_filename, out, is_video, False)
 					continue
-				
+
 				height, width, channels = img.shape
 				r = np.random.rand(1) * 0.8 + 0.1
 
@@ -671,29 +963,50 @@ if __name__ == '__main__':
 
 			if options.glitch_type == "desktop_glitch_one":
 				# print(img.shape)
-				new_list = create_desktop_glitch_one(img)
+				new_list = create_desktop_glitch_one(img, "1")
 
-				output_name = str(count) + "_desktop_glitch_one.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_desktop_glitch_one"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == "desktop_glitch_two":
-				new_list = create_desktop_glitch_two(img)
+				new_list = create_desktop_glitch_two(img, "1")
 
-				output_name = str(count) + "_desktop_glitch_two.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_desktop_glitch_two"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == "discoloration":
 				# print(img.shape)
-				new_list = create_discoloration(img)
+				new_list = create_discoloration(img, "1")
 
-				output_name = str(count) + "_discoloration.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_discoloration"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				# cv2.imwrite(output_filename, img)
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
@@ -701,36 +1014,57 @@ if __name__ == '__main__':
 
 			if options.glitch_type == "random_patch":
 				if is_bound_specified:
-					new_list = add_random_patches(img, arg1, arg2)
+					new_list = add_random_patches(img, "1", arg1, arg2)
 				else:
-					new_list = add_random_patches(img)
+					new_list = add_random_patches(img, "1")
 
-				output_name = str(count) + "_random_patch.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_random_patch"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'shape':
 				if is_bound_specified:
-					new_list = add_shapes(img, arg1, arg2)
+					new_list = add_shapes(img, "1", arg1, arg2)
 				else:
-					new_list = add_shapes(img)
+					new_list = add_shapes(img, "1")
 
-				output_name = str(count) + "_shape.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_shape"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'triangle':
 				if is_bound_specified:
-					new_list = add_triangles(img, arg1, arg2)
+					new_list = add_triangles(img, "1", arg1, arg2)
 				else:
-					new_list = add_triangles(img)
+					new_list = add_triangles(img, "1")
 
-				output_name = str(count) + "_triangle.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_triangle"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
@@ -738,48 +1072,76 @@ if __name__ == '__main__':
 
 			if options.glitch_type == 'shader':
 				if is_bound_specified:
-					new_list = add_shaders(img, arg1, arg2)
+					new_list = add_shaders(img, "1", arg1, arg2)
 				else:
-					new_list = add_shaders(img)
+					new_list = add_shaders(img, "1")
 
-				output_name = str(count) + "_shader.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_shader"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'dotted_line':
 				if is_bound_specified:
-					new_list = og.dotted_lines(img, arg1, arg2)
+					new_list = og.dotted_lines(img, "1", arg1, arg2)
 				else:
-					new_list = og.dotted_lines(img)
+					new_list = og.dotted_lines(img, "1")
 
-				output_name = str(count) + "_dotted_line.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_dotted_line"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'radial_dotted_line':
 				if is_bound_specified:
-					new_list = og.dotted_lines_radial(img, arg1, arg2)
+					new_list = og.dotted_lines_radial(img, "1", arg1, arg2)
 				else:
-					new_list = og.dotted_lines_radial(img)
+					new_list = og.dotted_lines_radial(img, "1")
 
-				output_name = str(count) + "_radial_dotted_line.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_radial_dotted_line"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'parallel_line':
 				if is_bound_specified:
-					new_list = og.parallel_lines(img, arg1, arg2)
+					new_list = og.parallel_lines(img, "1", arg1, arg2)
 				else:
-					new_list = og.parallel_lines(img)
+					new_list = og.parallel_lines(img, "1")
 
-				output_name = str(count) + "_parallel_line.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_parallel_line"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
@@ -787,22 +1149,36 @@ if __name__ == '__main__':
 
 			if options.glitch_type == 'square_patch':
 				if is_bound_specified:
-					new_list = og.square_patches(img, arg1, arg2)
+					new_list = og.square_patches(img, "1", arg1, arg2)
 				else:
-					new_list = og.square_patches(img)
+					new_list = og.square_patches(img, "1")
 
-				output_name = str(count) + "_square_patch.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_square_patch"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 
 			if options.glitch_type == 'texture_popin':
-				new_list = blurring(img)
+				new_list = blurring(img, "1")
 
-				output_name = str(count) + "_texture_popin.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_texture_popin"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
@@ -812,46 +1188,81 @@ if __name__ == '__main__':
 
 
 			if options.glitch_type == 'regular_triangulation':
-				new_list = triangulation(img)
+				new_list = triangulation(img, "1")
 
-				output_name = str(count) + "_regular_triangulation.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_regular_triangulation"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'morse_code':
-				new_list = add_vertical_pattern(img)
+				new_list = add_vertical_pattern(img, "1")
 
-				output_name = str(count) + "_morse_code.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_morse_code"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'stuttering':
-				new_list = produce_stuttering(img)
+				new_list = produce_stuttering(img, "1")
 
-				output_name = str(count) + "_stuttering.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_stuttering"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
 			if options.glitch_type == 'line_pixelation':
-				new_list = line_pixelation(img)
+				new_list = line_pixelation(img, "1")
 
-				output_name = str(count) + "_line_pixelation.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+				output_name = str(count) + "_line_pixelation"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
-		
-			if options.glitch_type == 'white_square':
-				new_list = addition_glitch.white_square(img)
 
-				output_name = str(count) + "_white_square.png"
-				output_filename = os.path.join(options.output_foldername, output_name)
+			if options.glitch_type == 'white_square':
+				new_list = addition_glitch.white_square(img, "1")
+
+				output_name = str(count) + "_white_square"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
 				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1

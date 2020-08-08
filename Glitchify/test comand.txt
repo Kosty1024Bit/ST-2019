@@ -1,0 +1,20 @@
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t discoloration
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t random_patch
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t shape			
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t shader
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t dotted_line
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t radial_dotted_line
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t square_patch
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t parallel_line
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t texture_popin
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t regular_triangulation
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t morse_code
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t desktop_glitch_one
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t desktop_glitch_two
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t stuttering
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t line_pixelation
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t white_square  
+
+
+
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t white_square -fj true -ofj C:\Users\Nikolay\Desktop\work\out -rj true -orj C:\Users\Nikolay\Desktop\work\out

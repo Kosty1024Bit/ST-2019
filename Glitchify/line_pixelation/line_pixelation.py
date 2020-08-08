@@ -4,7 +4,8 @@ import cv2
 import numpy as np
 import math
 from PIL import Image
-from collections import namedtuple
+
+from common_file import tree_return_class
 
 def vrglow(image,pixel,color,radius):
 	transparent=np.zeros((image.shape[0],image.shape[1],4),dtype=np.uint8)
@@ -62,7 +63,7 @@ def htglow(image,pixel,color,radius):
 	image=cv2.cvtColor(image,cv2.COLOR_RGBA2RGB)
 	return image
 
-def line_pixelation(img):
+def line_pixelation(img, label):
 	while(True):
 		vertical=0
 		horizontal=1
@@ -154,8 +155,7 @@ def line_pixelation(img):
 									image[indent+k+(n*height),i+j]=localcolor
 
 		if(not np.array_equal(img,image)):
-			res_list = namedtuple('res_list','img f_json r_json')
-			res = res_list(img = image, f_json = None, r_json = None)
+			res = tree_return_class.TreeRet(image, None, None)
 			return res
 
 

@@ -1,9 +1,10 @@
-import cv2  
+import cv2
 import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import namedtuple
+
+from common_file import tree_return_class
 
 
 def change_intensity(img, color, sub_color):
@@ -16,7 +17,7 @@ def change_intensity(img, color, sub_color):
 	for i in range(height):
 		img[height - i - 1,:,:] = (img[height - i - 1,:,:] * factor).astype(int)
 		factor *= np.random.uniform(0.95, 1)
-	
+
 	img = add_pattern(img, sub_color)
 	return img
 
@@ -44,8 +45,7 @@ def random_patch(img):
 			for k in range(3):
 				img[i,j,k] = np.random.randint(0,256)
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = img, f_json = None, r_json = None)
+	res = tree_return_class.TreeRet(img, None, None)
 	return res
 
 def form_combined_pattern(img):
@@ -70,7 +70,7 @@ def form_combined_pattern(img):
 	for i in range(4):
 		if i < 2 and np.random.uniform() < 0.15:
 			continue
-		img[sub_height*2:sub_height*3, i * sub_width: (i+1) * sub_width, :] = random_patch(img[sub_height*2:sub_height*3, i * sub_width: (i+1) * sub_width, :])
+		img[sub_height*2:sub_height*3, i * sub_width: (i+1) * sub_width, :] = random_patch(img[sub_height*2:sub_height*3, i * sub_width: (i+1) * sub_width, :]).img
 
 
 	color = np.random.randint(0,255,size = 3)
@@ -91,7 +91,7 @@ def form_combined_pattern(img):
 
 
 
-def create_desktop_glitch_two(img):
+def create_desktop_glitch_two(img, label):
 	height, width, channel = img.shape
 	sub_height = np.random.randint(int(height / 40), int(height / 30))
 	sub_width = sub_height
@@ -112,8 +112,7 @@ def create_desktop_glitch_two(img):
 					generate_pattern = False
 			count += 1
 
-	res_list = namedtuple('res_list','img f_json r_json')
-	res = res_list(img = img, f_json = None, r_json = None)
+	res = tree_return_class.TreeRet(img, None, None)
 	return res
 
 
