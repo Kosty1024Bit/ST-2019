@@ -22,11 +22,12 @@ def check_val(value):
 
 
 def white_square(picture, label, lo = 2, hi = 15):
-	pic = picture.copy()
-	height = pic.shape[0]
-	width = pic.shape[1]
+	height = picture.shape[0]
+	width = picture.shape[1]
 	number_of_patches = random.randint(lo,hi+1)
 
+	overlay = picture.copy()
+	pic = picture.copy()
 	f_json_list = []
 	max_x = 0
 	max_y = 0
@@ -34,7 +35,8 @@ def white_square(picture, label, lo = 2, hi = 15):
 	min_y = height
 
 	for i in range(number_of_patches):
-		size = random.randint(20,50)
+		size_x = random.randint(20,80)
+		size_y = random.randint(20,80)
 		#red = check_val(r + random.randint(-30,30))
 		#green = check_val(g + random.randint(-30,30))
 		#blue = check_val(b + random.randint(-30,30))
@@ -43,8 +45,8 @@ def white_square(picture, label, lo = 2, hi = 15):
 		first_y = random.randint(int(height*0.2), int(height*0.8))
 		first_x = random.randint(int(width*0.2), int(width*0.8))
 
-		last_y = first_y + size
-		last_x = first_x + size
+		last_y = first_y + size_x
+		last_x = first_x + size_y
 
 		min_x = min(min_x, first_x, last_x)
 		max_x = max(max_x, first_x, last_x)
@@ -52,12 +54,20 @@ def white_square(picture, label, lo = 2, hi = 15):
 		min_y = min(min_y, first_y, last_y)
 		max_y = max(max_y, first_y, last_y)
 
-		pic[first_y:(last_y), first_x:(last_x)] = color
+		x_top   = random.randint(first_x,last_x)
+		y_left  = random.randint(first_y,last_y)
+		x_down  = random.randint(first_x,last_x)
+		y_right = random.randint(first_y,last_y)
+
+		pts = np.array(((x_top, last_y), (last_x, y_right), (x_down, first_y), (first_x,y_left)), dtype=int)
+		cv2.fillConvexPoly(overlay, pts, color)
 
 		f_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, last_y]], None, "rectangle", {})
 
 		f_json_list.append(f_shapes.to_string_form())
 
+	alpha = .95
+	cv2.addWeighted(overlay, alpha, pic, 1 - alpha, 0, pic)
 	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
 
 	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])

@@ -5,7 +5,7 @@ import numpy as np
 import math
 from PIL import Image
 
-from common_file import tree_return_class
+from common_file.tree_return_class import TreeRet
 
 def vrglow(image,pixel,color,radius):
 	transparent=np.zeros((image.shape[0],image.shape[1],4),dtype=np.uint8)
@@ -155,7 +155,7 @@ def line_pixelation(img, label):
 									image[indent+k+(n*height),i+j]=localcolor
 
 		if(not np.array_equal(img,image)):
-			res = tree_return_class.TreeRet(image, None, None)
+			res = TreeRet(image, None, None)
 			return res
 
 

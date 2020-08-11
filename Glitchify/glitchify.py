@@ -36,25 +36,67 @@ def add_vertical_pattern(img, label):
 	row_count = 0
 	start_row_index = 0
 	horizontal_shift = random.randint(0, pattern_dist)
-	for y in range(horizontal_shift, width, pattern_dist):
+
+	min_x = width
+	max_x = 0
+
+	min_y = height
+	max_y = 0
+
+	f_json_list = []
+
+	for x in range(horizontal_shift, width, pattern_dist):
 		if row_count % 4 == 0:
 			vertical_shift = random.randint(0, pattern_length)
 
 		if np.random.uniform() < 0.75:
 			row_count += 1
 			continue
-		for x in range(0, height, pattern_length):
+
+		min_x_c = int(x)
+		max_x_c = int(x+1)
+
+		min_y_c = 0
+		max_y_c = 0
+
+		for y in range(0, height, pattern_length):
 			if np.random.uniform() < 0.4:
 				continue
-			img[(vertical_shift + x) % height, y, :] = color
-			img[(vertical_shift + x + segment_length) % height, y, :] = color
-			img[((vertical_shift + x + 2 * segment_length)% height):((vertical_shift + x + 4 * segment_length)% height), y, :] = color
-			img[(vertical_shift + x + 5 * segment_length)% height, y, :] = color
-			img[(vertical_shift + x + 6 * segment_length)% height, y, :] = color
+			y1 = (vertical_shift + y) % height
+			y2 = (vertical_shift + y + segment_length) % height
+			y3 = (vertical_shift + y + 2 * segment_length)% height
+			y3_step = (vertical_shift + y + 4 * segment_length)% height
+			y4 = (vertical_shift + y + 5 * segment_length)% height
+			y5 = (vertical_shift + y + 6 * segment_length)% height
+
+			img[y1, x, :] = color
+			img[y2, x, :] = color
+
+			max_y_3_f = 0
+			if y3_step != 0:
+				for y_3_f in range(y3, height, y3_step):
+					img[y_3_f, x] = color
+					max_y_3_f = int(max(max_y_3_f, y_3_f))
+			img[y4, x, :] = color
+			img[y5, x, :] = color
+
+			max_y_c = int(max(max_y_c, y1,y2,y3,y4,y5, max_y_3_f))
+
 		row_count += 1
 
-	res = TreeRet(img, None, None)
+		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
+
+		min_x = min(min_x, min_x_c)
+		max_x = max(max_x, max_x_c)
+
+		min_y = min(min_y, min_y_c)
+		max_y = max(max_y, max_y_c)
+
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
+	res = TreeRet(img, f_json_list, [r_shapes.to_string_form()])
 	return res
+
 
 def blurring(img, label):
 	blur = cv2.bilateralFilter(img, 40, 100, 100)
@@ -129,6 +171,7 @@ def create_discoloration(image, label):
 	res = TreeRet(img, [shapes.to_string_form()], [shapes.to_string_form()])
 	return res
 
+
 def triangulation(img, label):
 	h,w,_ = img.shape
 	grid_length = int(np.random.uniform(1.0 / 40, 1.0 / 25) * w)
@@ -154,6 +197,13 @@ def triangulation(img, label):
 			triangles.append(np.array([pt5,pt2,pt3]))
 			triangles.append(np.array([pt5,pt4,pt3]))
 
+	min_x = w
+	max_x = 0
+
+	min_y = h
+	max_y = 0
+
+	f_json_list = []
 
 	for t in triangles:
 		mid_pt = ((t[0] + t[1] + t[2])/3).astype(int)
@@ -166,7 +216,23 @@ def triangulation(img, label):
 
 		p = cv2.drawContours(img, [t], -1, c, -1)
 
-	res = TreeRet(img, None, None)
+		min_x_c = int(min(t[0,0],t[1,0],t[2,0]))
+		max_x_c = int(max(t[0,0],t[1,0],t[2,0]))
+
+		min_y_c = int(min(t[0,1],t[1,1],t[2,1]))
+		max_y_c = int(max(t[0,1],t[1,1],t[2,1]))
+
+		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
+
+		min_x = min(min_x, min_x_c)
+		max_x = max(max_x, max_x_c)
+
+		min_y = min(min_y, min_y_c)
+		max_y = max(max_y, max_y_c)
+
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
+	res = TreeRet(p, f_json_list, [r_shapes.to_string_form()])
 	return res
 
 
@@ -261,152 +327,65 @@ def point_two_line(x1_1,y1_1, x1_2,y1_2, x2_1,y2_1, x2_2,y2_2):
 	else:
 		return None
 
-
-def contntur_limitation(x1, y1, x2, y2, x3, y3, min_limit_x, min_limit_y, max_limit_x, max_limit_y):
+def contntur_limitation(in_point_list, min_limit_x, min_limit_y, max_limit_x, max_limit_y):
 	contur = []
 
-	point_1_is_out = False
-	point_2_is_out = False
-	point_3_is_out = False
+	is_out_list = []
 
-	if(x1 < min_limit_x or x1 > max_limit_x or y1 < min_limit_y or y1 > max_limit_y):
-		point_1_is_out = True
-	if(x2 < min_limit_x or x2 > max_limit_x or y2 < min_limit_y or y2 > max_limit_y):
-		point_2_is_out = True
-	if(x3 < min_limit_x or x3 > max_limit_x or y3 < min_limit_y or y3 > max_limit_y):
-		point_3_is_out = True
+	for (x_f, y_f) in in_point_list:
+		if(x_f < min_limit_x or x_f > max_limit_x or y_f < min_limit_y or y_f > max_limit_y):
+			is_out_list.append(True)
+		else:
+			is_out_list.append(False)
 
-	if point_1_is_out:
-		if not point_2_is_out:
-			left_horizontal_limit  = point_two_line(x1,y1, x2,y2, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
-			right_horizontal_limit = point_two_line(x1,y1, x2,y2, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+	f_1_count = 0
+	for (x, y) in in_point_list:
+		if is_out_list[f_1_count]:
+			f_2_count = 0
 
-			bottom_vertical_limit  = point_two_line(x1,y1, x2,y2, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
-			top_vertical_limit 	   = point_two_line(x1,y1, x2,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+			list_size_limit = [False, False, False, False]
 
-			if  left_horizontal_limit is not None:
-				(x,y) = left_horizontal_limit
-			elif right_horizontal_limit is not None:
-				(x,y) = right_horizontal_limit
-			elif bottom_vertical_limit is not None:
-				(x,y) = bottom_vertical_limit
-			elif top_vertical_limit is not None:
-				(x,y) = top_vertical_limit
-			else:
-				print("ERROR POINT 2 LiNE 1.2\n", x1, " ", y1, " ", x2, " ",y2, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
+			for (x2,y2)  in in_point_list:
+				if (f_1_count != f_2_count):
+					if not is_out_list[f_2_count]:
+						left_horizontal_limit  = point_two_line(x,y, x2,y2, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+						right_horizontal_limit = point_two_line(x,y, x2,y2, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
 
+						bottom_vertical_limit  = point_two_line(x,y, x2,y2, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+						top_vertical_limit 	   = point_two_line(x,y, x2,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+
+						if  left_horizontal_limit is not None:
+							(x_p, y_p) = left_horizontal_limit
+							list_size_limit[0] = True
+						elif right_horizontal_limit is not None:
+							(x_p, y_p) = right_horizontal_limit
+							list_size_limit[1] = True
+						elif bottom_vertical_limit is not None:
+							(x_p, y_p) = bottom_vertical_limit
+							list_size_limit[2] = True
+						elif top_vertical_limit is not None:
+							(x_p, y_p) = top_vertical_limit
+							list_size_limit[3] = True
+						else:
+							print("ERROR POINT", f_1_count, " LiNE ", f_2_count ," \n", x, y, x2 ,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+
+						contur.append([x_p,y_p])
+
+				if (list_size_limit[0] is True and list_size_limit[2] is True):
+					contur.append([min_limit_x, min_limit_y])
+				if (list_size_limit[0] is True and list_size_limit[3] is True):
+					contur.append([min_limit_x, max_limit_y])
+				if (list_size_limit[1] is True and list_size_limit[2] is True):
+					contur.append([max_limit_x, min_limit_y])
+				if (list_size_limit[1] is True and list_size_limit[3] is True):
+					contur.append([max_limit_x, max_limit_y])
+
+				f_2_count += 1
+		else:
 			contur.append([x,y])
-
-		if not point_3_is_out:
-			left_horizontal_limit  = point_two_line(x1,y1, x3,y3, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
-			right_horizontal_limit = point_two_line(x1,y1, x3,y3, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
-
-			bottom_vertical_limit  = point_two_line(x1,y1, x3,y3, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
-			top_vertical_limit 	   = point_two_line(x1,y1, x3,y3, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
-
-			if  left_horizontal_limit is not None:
-				(x,y) = left_horizontal_limit
-			elif right_horizontal_limit is not None:
-				(x,y) = right_horizontal_limit
-			elif bottom_vertical_limit is not None:
-				(x,y) = bottom_vertical_limit
-			elif top_vertical_limit is not None:
-				(x,y) = top_vertical_limit
-			else:
-				print("ERROR POINT 2 LiNE 1.3\n", x1, " ", y1, " ", x3, " ",y3, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
-
-			contur.append([x,y])
-	else:
-		contur.append([x1,y1])
-
-	if point_2_is_out:
-		if not point_1_is_out:
-			left_horizontal_limit  = point_two_line(x2,y2, x1,y1, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
-			right_horizontal_limit = point_two_line(x2,y2, x1,y1, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
-
-			bottom_vertical_limit  = point_two_line(x2,y2, x1,y1, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
-			top_vertical_limit 	   = point_two_line(x2,y2, x1,y1, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
-
-			if  left_horizontal_limit is not None:
-				(x,y) = left_horizontal_limit
-			elif right_horizontal_limit is not None:
-				(x,y) = right_horizontal_limit
-			elif bottom_vertical_limit is not None:
-				(x,y) = bottom_vertical_limit
-			elif top_vertical_limit is not None:
-				(x,y) = top_vertical_limit
-			else:
-				print("ERROR POINT 2 LiNE 2.1\n", x2, " ", y2, " ", x1, " ",y1, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
-
-			contur.append([x,y])
-
-		if not point_3_is_out:
-			left_horizontal_limit  = point_two_line(x2,y2, x3,y3, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
-			right_horizontal_limit = point_two_line(x2,y2, x3,y3, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
-
-			bottom_vertical_limit  = point_two_line(x2,y2, x3,y3, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
-			top_vertical_limit 	   = point_two_line(x2,y2, x3,y3, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
-
-			if  left_horizontal_limit is not None:
-				(x,y) = left_horizontal_limit
-			elif right_horizontal_limit is not None:
-				(x,y) = right_horizontal_limit
-			elif bottom_vertical_limit is not None:
-				(x,y) = bottom_vertical_limit
-			elif top_vertical_limit is not None:
-				(x,y) = top_vertical_limit
-			else:
-				print("ERROR POINT 2 LiNE 2.3\n", x2, " ", y2, " ", x3, " ",y3, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
-
-			contur.append([x,y])
-	else:
-		contur.append([x2,y2])
-
-	if point_3_is_out:
-		if not point_1_is_out:
-			left_horizontal_limit  = point_two_line(x3,y3, x1,y1, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
-			right_horizontal_limit = point_two_line(x3,y3, x1,y1, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
-
-			bottom_vertical_limit  = point_two_line(x3,y3, x1,y1, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
-			top_vertical_limit 	   = point_two_line(x3,y3, x1,y1, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
-
-			if  left_horizontal_limit is not None:
-				(x,y) = left_horizontal_limit
-			elif right_horizontal_limit is not None:
-				(x,y) = right_horizontal_limit
-			elif bottom_vertical_limit is not None:
-				(x,y) = bottom_vertical_limit
-			elif top_vertical_limit is not None:
-				(x,y) = top_vertical_limit
-			else:
-				print("ERROR POINT 2 LiNE 3.1\n", x3, " ", y3, " ", x1, " ",y1, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
-
-			contur.append([x,y])
-
-		if not point_2_is_out:
-			left_horizontal_limit  = point_two_line(x3,y3, x2,y2, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
-			right_horizontal_limit = point_two_line(x3,y3, x2,y2, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
-
-			bottom_vertical_limit  = point_two_line(x3,y3, x2,y2, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
-			top_vertical_limit 	   = point_two_line(x3,y3, x2,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
-			if not left_horizontal_limit is None:
-				(x,y) = left_horizontal_limit
-			elif not right_horizontal_limit is None:
-				(x,y) = right_horizontal_limit
-			elif not bottom_vertical_limit is None:
-				(x,y) = bottom_vertical_limit
-			elif not top_vertical_limit is None:
-				(x,y) = top_vertical_limit
-			else:
-				print("ERROR POINT 2 LiNE 3.2\n", x3, " ", y3, " ", x2, " ",y2, " ", min_limit_x,  " ",max_limit_y,  " ",max_limit_x, " ", max_limit_y,  " \n")
-
-			contur.append([x,y])
-	else:
-		contur.append([x3,y3])
+		f_1_count += 1
 
 	return contur
-
-
 
 def add_shapes(im, label, lo = 2, hi = 5):
 	img = im.copy()
@@ -419,7 +398,7 @@ def add_shapes(im, label, lo = 2, hi = 5):
 	x_step, y_step = int(w/6), int(h/4)
 	for x in range(0, w, x_step):
 		for y in range(0, h, y_step):
-			new_shade = np.mean(img[x:x+x_step, y:y+y_step])
+			new_shade = np.mean(img[y:y+y_step, x:x+x_step])
 			if  new_shade <= mean_shade:
 				mean_shade = new_shade
 				grid = (x,y)
@@ -433,6 +412,7 @@ def add_shapes(im, label, lo = 2, hi = 5):
 	# Add shapes
 	minLoc = (np.random.randint(grid[0], min(grid[0]+x_step, w)), np.random.randint(grid[1], min(grid[1]+x_step, h)))
 	num_shapes = np.random.randint(lo,hi+1)
+
 	for i in range(num_shapes):
 		stretch = np.random.randint(40, 100)
 		diff1, diff2 = np.random.randint(-5,5), np.random.randint(-5,5)
@@ -442,7 +422,8 @@ def add_shapes(im, label, lo = 2, hi = 5):
 		y2 = y1 + np.random.randint(1,12)/5 * diff2 * stretch
 
 		pts = np.array((minLoc, (x1, y1), (x2, y2)), dtype=int)
-		contur = contntur_limitation(minLoc[0],minLoc[1], x1,y1,x2,y2, 0,0, w-1,h-1)
+		contur = contntur_limitation([minLoc, [x1,y1], [x2,y2]]	, 0,0, w-1,h-1)
+		print (contur)
 
 		(t_x1, t_y1) = contur[0]
 		t_x1 = int(math.ceil(t_x1))
@@ -500,6 +481,15 @@ def add_triangles(im, label, lo = 1, hi = 3):
 	b_int, g_int, r_int = get_random_color()
 	cv2.fillConvexPoly(overlay, pts, color= tuple([b_int, g_int, r_int]) )
 
+	f_json_list = []
+	max_x = max(x_0,x_1,x_2)
+	max_y = max(y_0,y_1,y_2)
+	min_x = min(x_0,x_1,x_2)
+	min_y =	min(y_0,y_1,y_2)
+
+	f_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x,max_y]], None, "rectangle", {})
+	f_json_list.append(f_shapes.to_string_form())
+
 	num_shapes = np.random.randint(lo, hi + 1)
 	alpha = .95
 	for i in range(num_shapes):
@@ -513,9 +503,28 @@ def add_triangles(im, label, lo = 1, hi = 3):
 		b_int, g_int, r_int = get_random_color()
 		cv2.fillConvexPoly(overlay, pts, color= tuple([b_int, g_int, r_int]) )
 
+		temp_min_x = min(x_0,x_1,x_2)
+		temp_min_y = min(y_0,y_1,y_2)
+
+		temp_max_x = max(x_0,x_1,x_2)
+		temp_max_y = max(y_0,y_1,y_2)
+
+		f_shapes = labelMe_class.Shapes(label, [[temp_min_x, temp_min_y], [temp_max_x, temp_max_y]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
+
+		min_x = min(min_x, temp_min_x)
+		max_x = max(max_x, temp_max_x)
+
+		min_y = min(min_y, temp_min_y)
+		max_y = max(max_y, temp_max_y)
+
+
 	cv2.addWeighted(overlay, alpha, output, 1 - alpha, 0, output)
 
-	res = TreeRet(output, None, None)
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
+	r_json_list = [r_shapes.to_string_form()]
+
+	res = TreeRet(output, f_json_list, r_json_list)
 	return res
 
 
@@ -550,6 +559,12 @@ def color_blend(img, overlay1, overlay2, angle = 0):
 
 	img = imutils.rotate_bound(img, -1 * angle)
 
+	cv2.imshow ("overlay1", overlay1)
+	cv2.imshow ("overlay2", overlay2)
+	cv2.imshow ("img",img)
+	cv2.waitKey()
+
+
 	return img
 #############################
 
@@ -564,6 +579,13 @@ def add_shaders(im, label, lo = 1, hi = 3):
 
 	#####big shaders in forms of n-gons
 	num_shapes = np.random.randint(lo,hi+1)
+
+	f_json_list = []
+	max_x = 0
+	max_y = 0
+	min_x = w
+	min_y = h
+
 	for i in range(num_shapes):
 		x_0, y_0 = np.random.randint(w), np.random.randint(h)
 		x_1, y_1 = np.random.randint(-300,w+300), np.random.randint(-300,h+300)
@@ -571,10 +593,48 @@ def add_shaders(im, label, lo = 1, hi = 3):
 
 		pts = np.array(((x_0, y_0), (x_1, y_1), (x_2, y_2)), dtype=int)
 
+		temp_max_x = max(x_0,x_1,x_2)
+		temp_max_y = max(y_0,y_1,y_2)
+		temp_min_x = min(x_0,x_1,x_2)
+		temp_min_y = min(y_0,y_1,y_2)
+
 		extra_n = np.random.randint(4)
 
 		for i in range(extra_n): #extra number of points to make an n_gon
-			pts = np.append(pts, [[np.random.randint(-300,h+300), np.random.randint(-300,w+300)]], axis = 0)
+			temp_ran_x = np.random.randint(-300,h+300)
+			temp_ran_y = np.random.randint(-300,w+300)
+			pts = np.append(pts, [[temp_ran_x, temp_ran_y]], axis = 0)
+
+
+		contur = contntur_limitation(pts, 0,0, w-1,h-1)
+
+		(t_x1, t_y1) = contur[0]
+		t_x1 = int(math.ceil(t_x1))
+		t_y1 = int(math.ceil(t_y1))
+		temp_min_x = t_x1
+		temp_min_y = t_y1
+
+		temp_max_x = t_x1
+		temp_max_y = t_y1
+
+		for (t_x,t_y) in contur:
+			t_x = int(math.ceil(t_x))
+			t_y = int(math.ceil(t_y))
+
+			temp_min_x = min(t_x,temp_min_x)
+			temp_min_y = min(t_y,temp_min_y)
+
+			temp_max_x = max(t_x,temp_max_x)
+			temp_max_y = max(t_y,temp_max_y)
+
+		f_shapes = labelMe_class.Shapes(label, [[temp_min_x, temp_min_y], [temp_max_x, temp_max_y]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
+
+		min_x = min(min_x, temp_min_x)
+		max_x = max(max_x, temp_max_x)
+
+		min_y = min(min_y, temp_min_y)
+		max_y = max(max_y, temp_max_y)
 
 		alpha = 1
 
@@ -593,6 +653,9 @@ def add_shaders(im, label, lo = 1, hi = 3):
 
 		colors = np.clip(colors, a_min = 0, a_max = 255)
 
+
+		f_shapes = labelMe_class.Shapes("2", [[start_x, start_y], [mid_x, mid_y]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
 		# colors[0,:] = npr.randint(0, 256, size = 3)
 		# colors[1,:] = colors[0,:] + npr.randint(0, 100, size = 3)
 		# colors[1,:] = np.clip(colors[1,:], 0, 255)
@@ -607,7 +670,10 @@ def add_shaders(im, label, lo = 1, hi = 3):
 
 	t_img = gradient(output, color_blend(im, overlay1, overlay2, a1), a2)
 
-	res = TreeRet(t_img, None, None)
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
+	r_json_list = [r_shapes.to_string_form()]
+
+	res = TreeRet(t_img, f_json_list, r_json_list)
 	return res
 
 def write_files(original_img, img, is_margin_specified, filename, out, is_video, append_to_arr):
