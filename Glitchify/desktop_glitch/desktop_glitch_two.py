@@ -4,7 +4,9 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-from common_file import tree_return_class
+from common_file import labelMe_class
+from common_file.tree_return_class import TreeRet
+
 
 
 def change_intensity(img, color, sub_color):
@@ -45,7 +47,7 @@ def random_patch(img):
 			for k in range(3):
 				img[i,j,k] = np.random.randint(0,256)
 
-	res = tree_return_class.TreeRet(img, None, None)
+	res = TreeRet(img, None, None)
 	return res
 
 def form_combined_pattern(img):
@@ -96,6 +98,8 @@ def create_desktop_glitch_two(img, label):
 	sub_height = np.random.randint(int(height / 40), int(height / 30))
 	sub_width = sub_height
 
+	f_json_list = []
+	
 	count = 0
 	for i in range(0, height,  sub_height):
 		generate_pattern = False
@@ -110,9 +114,20 @@ def create_desktop_glitch_two(img, label):
 				img[i:i+sub_height, j:j+sub_width, :] = form_combined_pattern(img[i:i+sub_height, j:j+sub_width, :])
 				if np.random.uniform() < 0.1:
 					generate_pattern = False
+					
+				f_shapes = labelMe_class.Shapes(label, [[j, i], [j + sub_width, i + sub_height]], None, "rectangle", {})
+				f_json_list.append(f_shapes.to_string_form())
 			count += 1
+			
+			
+	#r_shapes = labelMe_class.Shapes(label, [[y0, x0], [y1, x1]], None, "rectangle", {})
+	#r_json_list = [r_shapes.to_string_form()]
+	
+	#r_shapes2 = labelMe_class.Shapes("2", [[sub_orig_y, sub_orig_x], [sub_orig_y + subwidth, sub_orig_x + subheight]], None, "rectangle", {})
+	#r_json_list.append(r_shapes2.to_string_form())
+	#res = TreeRet(orig_img, f_json_list, r_json_list)
 
-	res = tree_return_class.TreeRet(img, None, None)
+	res = TreeRet(img, f_json_list, None)
 	return res
 
 

@@ -14,6 +14,8 @@ D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t stuttering
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t line_pixelation
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t white_square  
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t black_tree
+
 
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t triangle
 

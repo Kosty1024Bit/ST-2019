@@ -14,8 +14,9 @@ import ou_glitch.ou_glitch as og
 from stuttering.stuttering import produce_stuttering
 from line_pixelation.line_pixelation import line_pixelation
 from addition_glitch import addition_glitch
-import json
 
+import json
+from itertools import tee
 from common_file import labelMe_class
 from common_file.tree_return_class import TreeRet
 import math
@@ -322,8 +323,9 @@ def point_two_line(x1_1,y1_1, x1_2,y1_2, x2_1,y2_1, x2_2,y2_2):
 	x = det(d, xdiff) / div
 	y = det(d, ydiff) / div
 
-	if (min(x1_1, x1_2) <= x <= max(x1_1, x1_2)) and (min(y2_1, y2_2) <= y <= max(y2_1, y2_2)):
-		return (x,y)
+	if (min(x1_1, x1_2) <= x <= max(x1_1, x1_2)) and (min(y1_1, y1_2) <= y <= max(y1_1, y1_2)):
+		if(min(x2_1, x2_2) <= x <= max(x2_1, x2_2)) and (min(y2_1, y2_2) <= y <= max(y2_1, y2_2)):
+			return (x,y)
 	else:
 		return None
 
@@ -339,52 +341,44 @@ def contntur_limitation(in_point_list, min_limit_x, min_limit_y, max_limit_x, ma
 			is_out_list.append(False)
 
 	f_1_count = 0
-	for (x, y) in in_point_list:
-		if is_out_list[f_1_count]:
-			f_2_count = 0
 
-			list_size_limit = [False, False, False, False]
+	iter_first = iter(in_point_list)
+	iter_first,iter_second = tee(iter_first)
 
-			for (x2,y2)  in in_point_list:
-				if (f_1_count != f_2_count):
-					if not is_out_list[f_2_count]:
-						left_horizontal_limit  = point_two_line(x,y, x2,y2, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
-						right_horizontal_limit = point_two_line(x,y, x2,y2, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
+	for (x,y) in iter_first:
 
-						bottom_vertical_limit  = point_two_line(x,y, x2,y2, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
-						top_vertical_limit 	   = point_two_line(x,y, x2,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
+		iter_first,iter_second = tee(iter_first)
+		f_2_count = f_1_count + 1
+		for (x2,y2) in iter_second:
 
-						if  left_horizontal_limit is not None:
-							(x_p, y_p) = left_horizontal_limit
-							list_size_limit[0] = True
-						elif right_horizontal_limit is not None:
-							(x_p, y_p) = right_horizontal_limit
-							list_size_limit[1] = True
-						elif bottom_vertical_limit is not None:
-							(x_p, y_p) = bottom_vertical_limit
-							list_size_limit[2] = True
-						elif top_vertical_limit is not None:
-							(x_p, y_p) = top_vertical_limit
-							list_size_limit[3] = True
-						else:
-							print("ERROR POINT", f_1_count, " LiNE ", f_2_count ," \n", x, y, x2 ,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
 
-						contur.append([x_p,y_p])
+			left_horizontal_limit  = point_two_line(x,y, x2,y2, min_limit_x, min_limit_y, min_limit_x, max_limit_y)
+			right_horizontal_limit = point_two_line(x,y, x2,y2, max_limit_x, min_limit_y, max_limit_x, max_limit_y)
 
-				if (list_size_limit[0] is True and list_size_limit[2] is True):
-					contur.append([min_limit_x, min_limit_y])
-				if (list_size_limit[0] is True and list_size_limit[3] is True):
-					contur.append([min_limit_x, max_limit_y])
-				if (list_size_limit[1] is True and list_size_limit[2] is True):
-					contur.append([max_limit_x, min_limit_y])
-				if (list_size_limit[1] is True and list_size_limit[3] is True):
-					contur.append([max_limit_x, max_limit_y])
+			bottom_vertical_limit  = point_two_line(x,y, x2,y2, min_limit_x, min_limit_y, max_limit_x, min_limit_y)
+			top_vertical_limit 	   = point_two_line(x,y, x2,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
 
-				f_2_count += 1
-		else:
-			contur.append([x,y])
+			if  left_horizontal_limit is not None:
+				(x_p, y_p) = left_horizontal_limit
+				contur.append([x_p,y_p])
+
+			if right_horizontal_limit is not None:
+				(x_p, y_p) = right_horizontal_limit
+				contur.append([x_p,y_p])
+
+			if bottom_vertical_limit is not None:
+				(x_p, y_p) = bottom_vertical_limit
+				contur.append([x_p,y_p])
+
+			if top_vertical_limit is not None:
+				(x_p, y_p) = top_vertical_limit
+				contur.append([x_p,y_p])
+
+			f_2_count += 1
+		if(is_out_list[f_1_count] == False):
+				contur.append([x,y])
+						#print("ERROR POINT", f_1_count, " LiNE ", f_2_count ," \n", x, y, x2 ,y2, min_limit_x, max_limit_y, max_limit_x, max_limit_y)
 		f_1_count += 1
-
 	return contur
 
 def add_shapes(im, label, lo = 2, hi = 5):
@@ -393,11 +387,11 @@ def add_shapes(im, label, lo = 2, hi = 5):
 
 	# Find the darkest region of the image
 	grid = (-1,-1)
-	mean_shade = np.mean(img) #у 1 картинки возникает warning в консоль, думаю тут
+	mean_shade = np.mean(img)
 
 	x_step, y_step = int(w/6), int(h/4)
-	for x in range(0, w, x_step):
-		for y in range(0, h, y_step):
+	for y in range(0, h, y_step):
+		for x in range(0, w, x_step):
 			new_shade = np.mean(img[y:y+y_step, x:x+x_step])
 			if  new_shade <= mean_shade:
 				mean_shade = new_shade
@@ -411,6 +405,7 @@ def add_shapes(im, label, lo = 2, hi = 5):
 
 	# Add shapes
 	minLoc = (np.random.randint(grid[0], min(grid[0]+x_step, w)), np.random.randint(grid[1], min(grid[1]+x_step, h)))
+	#minLoc = (np.random.randint(0.1 * w, 0.9 * w), np.random.randint(0.1 * h, 0.9 * h))
 	num_shapes = np.random.randint(lo,hi+1)
 
 	for i in range(num_shapes):
@@ -423,7 +418,6 @@ def add_shapes(im, label, lo = 2, hi = 5):
 
 		pts = np.array((minLoc, (x1, y1), (x2, y2)), dtype=int)
 		contur = contntur_limitation([minLoc, [x1,y1], [x2,y2]]	, 0,0, w-1,h-1)
-		print (contur)
 
 		(t_x1, t_y1) = contur[0]
 		t_x1 = int(math.ceil(t_x1))
@@ -1318,9 +1312,31 @@ if __name__ == '__main__':
 					count += 1
 
 			if options.glitch_type == 'white_square':
-				new_list = addition_glitch.white_square(img, "1")
+				if is_bound_specified:
+					new_list = addition_glitch.white_square(img, "1", arg1, arg2)
+				else:
+					new_list = addition_glitch.white_square(img, "1")
 
 				output_name = str(count) + "_white_square"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+				if not is_video:
+					count += 1
+
+			if options.glitch_type == 'black_tree':
+				if is_bound_specified:
+					new_list = addition_glitch.black_tree(img, "1", arg1, arg2)
+				else:
+					new_list = addition_glitch.black_tree(img, "1")
+
+				output_name = str(count) + "_black_tree"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)

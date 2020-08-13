@@ -5,6 +5,7 @@ import numpy as np
 import math
 from PIL import Image
 
+from common_file import labelMe_class
 from common_file.tree_return_class import TreeRet
 
 def vrglow(image,pixel,color,radius):
@@ -63,7 +64,19 @@ def htglow(image,pixel,color,radius):
 	image=cv2.cvtColor(image,cv2.COLOR_RGBA2RGB)
 	return image
 
-def line_pixelation(img, label):
+def line_pixelation(img, label, label2 = "2"):
+
+	f_json_list = []
+	max_x = 0
+	max_y = 0
+	min_x = img.shape[1]
+	min_y =	img.shape[0]
+
+	max_x_p = 0
+	max_y_p = 0
+	min_x_p = img.shape[1]
+	min_y_p = img.shape[0]
+
 	while(True):
 		vertical=0
 		horizontal=1
@@ -86,7 +99,6 @@ def line_pixelation(img, label):
 				print("Error: 'width' is too large for input dimensions. ")
 				continue
 		if(orientation==horizontal):
-			indent=random.randrange(0,image.shape[0]-height)
 			if(height<image.shape[0]):
 				indent=random.randrange(0,image.shape[0]-height)
 			else:
@@ -107,15 +119,67 @@ def line_pixelation(img, label):
 		if(orientation==vertical):
 			for n in list(range(stripes)):
 				if (ss[n]==1):
+
+					temp_min_x = img.shape[1]-1
+					temp_min_y = img.shape[0]-1
+					temp_max_x = 0
+					temp_max_y = 0
+
+					temp_min_x_p = img.shape[1]-1
+					temp_min_y_p = img.shape[0]-1
+					temp_max_x_p = 0
+					temp_max_y_p = 0
+
 					for i in list(range(0,image.shape[0],height)):
+
 						color=np.array([random.randrange(0,256),random.randrange(0,256),random.randrange(0,256)])
 						mono=0
 						if(monobias>0):
 							mono=random.randrange(1,11)
 						if(glow==6 and n==0 and random.randrange(1,10)<random.randrange(1,3)):
-							image=vlglow(image,[i*height+int(height/2),indent],color,random.randrange(5,4+4*height))
+							radius = random.randrange(5,4+4*height)
+							y = i*height+int(height/2)
+							if (y - radius < image.shape[0]- 10):
+								image=vlglow(image,[y ,indent],color, radius)
+
+								temp_min_x_p = min(max(indent - radius,0), img.shape[1]-1)
+								temp_min_y_p = min(max(y - radius, 0), img.shape[0]-1)
+
+								temp_max_x_p = min(indent, img.shape[1]-1)
+								temp_max_y_p = min(y + radius, img.shape[0]-1)
+
+								min_x_p = min(min_x_p, temp_min_x_p)
+								max_x_p = max(max_x_p, temp_max_x_p)
+
+								min_y_p = min(min_y_p, temp_min_y_p)
+								max_y_p = max(max_y_p, temp_max_y_p)
+
+								f_shapes = labelMe_class.Shapes(label2, [[temp_min_x_p ,temp_min_y_p ], [temp_max_x_p, temp_max_y_p]], None, "rectangle", {})
+								f_json_list.append(f_shapes.to_string_form())
+
+
 						if(glow==7 and n==(len(ss)-1) and random.randrange(1,10)<random.randrange(1,4)):
-							image=vrglow(image,[i*height+int(height/2),indent+n*width],color,random.randrange(5,70))
+							radius = random.randrange(5,70)
+							y = i*height+int(height/2)
+							if (y - radius < image.shape[0]- 10):
+								image=vrglow(image,[y, indent+n*width],color, radius)
+
+								temp_min_x_p = min(max(indent+n*width, 0), img.shape[1]-1)
+								temp_min_y_p = min(max(y - radius, 0), img.shape[0]-1)
+
+								temp_max_x_p = min(indent+n*width + 1 + radius, img.shape[1]-1)
+								temp_max_y_p = min(y + radius, img.shape[0]-1)
+
+								min_x_p = min(min_x_p, temp_min_x_p)
+								max_x_p = max(max_x_p, temp_max_x_p)
+
+								min_y_p = min(min_y_p, temp_min_y_p)
+								max_y_p = max(max_y_p, temp_max_y_p)
+
+								f_shapes = labelMe_class.Shapes(label2, [[temp_min_x_p ,temp_min_y_p ], [temp_max_x_p, temp_max_y_p]], None, "rectangle", {})
+								f_json_list.append(f_shapes.to_string_form())
+
+
 						for j in list(range(height)):
 							for k in list(range(width)):
 								localcolor=np.array(color)
@@ -129,18 +193,85 @@ def line_pixelation(img, label):
 										localcolor=monocolor
 									image[i+j,indent+(k+n*width)]=localcolor
 
+									temp_min_x = min(indent+(k+n*width), temp_min_x)
+									temp_min_y = min(i+j, temp_min_y)
+
+									temp_max_x = min(max(indent+(k+n*width) + 1, temp_max_x), img.shape[1]-1)
+									temp_max_y = min(max(i+j, temp_max_y) + 1,	img.shape[0]-1)
+
+
+
+					if (temp_min_x != 0 or temp_min_y != 0 or temp_max_x != img.shape[1]-1 or temp_max_y != img.shape[0]-1):
+
+						f_shapes = labelMe_class.Shapes(label, [[temp_min_x, temp_min_y], [temp_max_x, temp_max_y]], None, "rectangle", {})
+						f_json_list.append(f_shapes.to_string_form())
+
+						min_x = min(min_x, temp_min_x)
+						max_x = max(max_x, temp_max_x)
+
+						min_y = min(min_y, temp_min_y)
+						max_y = max(max_y, temp_max_y)
+
 		if(orientation==horizontal):
 			for n in list(range(stripes)):
 				if (ss[n]==1):
+					temp_min_x = img.shape[1]-1
+					temp_min_y = img.shape[0]-1
+					temp_max_x = 0
+					temp_max_y = 0
+
+					temp_min_x_p = img.shape[1]-1
+					temp_min_y_p = img.shape[0]-1
+					temp_max_x_p = 0
+					temp_max_y_p = 0
+
 					for i in list(range(0,image.shape[1],width)):
 						color=np.array([random.randrange(0,256),random.randrange(0,256),random.randrange(0,256)])
 						mono=0
 						if(monobias>0):
 							mono=random.randrange(1,11)
 						if(glow==6 and n==0 and random.randrange(1,10)<random.randrange(1,3)):
-							image=htglow(image,[indent,i*width+int(width/2)],color,random.randrange(5,4+4*width))
+							x = i*width+int(width/2)
+							radius = random.randrange(5,4+4*width)
+							if (x - radius < img.shape[1]- 10):
+								image=htglow(image,[indent, x],color, radius)
+
+								temp_min_y_p = min(max(indent - radius,0), img.shape[0]-1)
+								temp_min_x_p = min(max(x - radius, 0), img.shape[1]-1)
+
+								temp_max_y_p = min(indent,img.shape[0]-1)
+								temp_max_x_p = min(x + radius,img.shape[1]-1)
+
+								min_x_p = min(min_x_p, temp_min_x_p)
+								max_x_p = max(max_x_p, temp_max_x_p)
+
+								min_y_p = min(min_y_p, temp_min_y_p)
+								max_y_p = max(max_y_p, temp_max_y_p)
+
+								f_shapes = labelMe_class.Shapes(label2, [[temp_min_x_p ,temp_min_y_p ], [temp_max_x_p, temp_max_y_p]], None, "rectangle", {})
+								f_json_list.append(f_shapes.to_string_form())
+
 						if(glow==7 and n==(len(ss)-1) and random.randrange(1,10)<random.randrange(1,4)):
-							image=hbglow(image,[indent+height*n,i*width+int(width/2)],color,random.randrange(5,70))
+							radius = random.randrange(5,70)
+							x = i*width+int(width/2)
+							if (x - radius < img.shape[1] - 10):
+								image=hbglow(image,[indent+height*n, x],color,radius)
+
+								temp_min_y_p = min(max(indent+height*n ,0), img.shape[0]-1)
+								temp_min_x_p = min(max(x - radius, 0), img.shape[1]-1)
+
+								temp_max_y_p = min(indent+height*n + radius,img.shape[0]-1)
+								temp_max_x_p = min(x + radius,img.shape[1]-1)
+
+								min_x_p = min(min_x_p, temp_min_x_p)
+								max_x_p = max(max_x_p, temp_max_x_p)
+
+								min_y_p = min(min_y_p, temp_min_y_p)
+								max_y_p = max(max_y_p, temp_max_y_p)
+
+								f_shapes = labelMe_class.Shapes(label2, [[temp_min_x_p ,temp_min_y_p ], [temp_max_x_p, temp_max_y_p]], None, "rectangle", {})
+								f_json_list.append(f_shapes.to_string_form())
+
 						for j in list(range(width)):
 							for k in list(range(height)):
 								localcolor=np.array(color)
@@ -154,8 +285,31 @@ def line_pixelation(img, label):
 										localcolor=monocolor
 									image[indent+k+(n*height),i+j]=localcolor
 
+									temp_min_y = min(indent+k+(n*height), temp_min_y)
+									temp_min_x = min(i+j, temp_min_x)
+
+									temp_max_y = min(max(indent+k+(n*height) + 1, temp_max_y),	img.shape[0]-1)
+									temp_max_x = min(max(i+j, temp_max_x),	img.shape[1]-1)
+
+
+					if (temp_min_x != 0 or temp_min_y != 0 or temp_max_x != img.shape[1]-1 or temp_max_y != img.shape[0]-1):
+
+						f_shapes = labelMe_class.Shapes(label, [[temp_min_x, temp_min_y], [temp_max_x, temp_max_y]], None, "rectangle", {})
+						f_json_list.append(f_shapes.to_string_form())
+
+						min_x = min(min_x, temp_min_x)
+						max_x = max(max_x, temp_max_x)
+
+						min_y = min(min_y, temp_min_y)
+						max_y = max(max_y, temp_max_y)
+
 		if(not np.array_equal(img,image)):
-			res = TreeRet(image, None, None)
+			r_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
+			r_json_list = [r_shapes.to_string_form()]
+			if (max_x_p != 0 or max_y_p != 0 or min_x_p != img.shape[1]-1 or min_y_p != img.shape[0]-1):
+				r_shapes = labelMe_class.Shapes(label2, [[min_x_p, min_y_p], [max_x_p, max_y_p]], None, "rectangle", {})
+				r_json_list.append(r_shapes.to_string_form())
+			res = TreeRet(image, f_json_list, r_json_list)
 			return res
 
 

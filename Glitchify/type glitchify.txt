@@ -1,6 +1,6 @@
 1. discoloration
 2. random_patch
-3. shape			-работает, но выдаёт ошибку
+3. shape
 4. shader
 5. dotted_line
 6. radial_dotted_line
@@ -14,5 +14,6 @@
 14. screen_tearing    	      	- не доделано
 15. stuttering
 16. line_pixelation
-17. white_square  		- пока что идеальные квадраты
+17. white_square
 18. triangle
+19. black_tree

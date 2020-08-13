@@ -5,7 +5,8 @@ import numpy as np
 import numpy.random as npr
 import matplotlib.pyplot as plt
 
-from common_file import tree_return_class
+from common_file import labelMe_class
+from common_file.tree_return_class import TreeRet
 
 
 def merge(orig, img, square_width):
@@ -120,6 +121,12 @@ def create_desktop_glitch_one(orig_img, label):
 
 	orig_img[x0:x1,y0:y1,:] = img
 
+	r_shapes = labelMe_class.Shapes(label, [[y0, x0], [y1, x1]], None, "rectangle", {})
+	r_json_list = [r_shapes.to_string_form()]
+	
 
-	res = tree_return_class.TreeRet(orig_img, None, None)
+	#res = TreeRet(orig_img, f_json_list, r_json_list)
+
+
+	res = TreeRet(orig_img, None, r_json_list)
 	return res
