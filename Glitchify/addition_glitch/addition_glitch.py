@@ -6,19 +6,10 @@
 
 import cv2
 import numpy.random as random
-import matplotlib.pyplot as plt
 import numpy as np
-from collections import namedtuple
 
 from common_file import labelMe_class
 from common_file.tree_return_class import TreeRet
-
-def check_val(value):
-	if value > 255:
-		value = 255
-	if value < 0:
-		value = 0
-	return value
 
 
 def intersection_check(list_coordinate, point1, point2):
@@ -48,18 +39,18 @@ def white_square(picture, label, lo = 2, hi = 15):
 
 	for i in range(number_of_patches):
 
-		(red,green,blue) = random.random(3)
-		red   = check_val(to_int(red   * (255 - 240) + 240))
-		green = check_val(to_int(green * (256 - 240) + 240))
-		blue  = check_val(to_int(blue  * (256 - 240) + 240))
+		(red, green, blue) = random.randint(240,256, size = 3) #верхняя граница не входит
+		red   = int(red)
+		green = int(green)
+		blue  = int(blue)
+
 		color = [blue, green, red]
 
 		is_intersection = True
 
 		count = 0
 		while(is_intersection):
-			random.seed()
-			forfeit = int(round(20 / 10000 * count))
+			forfeit = to_int(20 / 10000 * count)
 
 			(first_x,first_y) = random.random(2)
 			(size_x, size_y) =  random.random(2)
@@ -81,6 +72,7 @@ def white_square(picture, label, lo = 2, hi = 15):
 				is_intersection = False
 				print(list_coordinate_rectangle)
 				print("out with ", first_x, first_y, last_x, last_y)
+
 		list_coordinate_rectangle.append([[first_x,first_y], [last_x, last_y]])
 
 		#на случай, если фигура не вписывается в картинку
@@ -93,10 +85,10 @@ def white_square(picture, label, lo = 2, hi = 15):
 		min_y = min(min_y, first_y, last_y)
 		max_y = max(max_y, first_y, last_y)
 
-		x_top   = random.randint(int(round(first_x + 0.1 * size_x)), int(round(last_x - 0.1 * size_x)))
-		y_left  = random.randint(int(round(first_y + 0.1 * size_y)), int(round(last_y - 0.1 * size_y)))
-		x_down  = random.randint(int(round(first_x + 0.1 * size_x)), int(round(last_x - 0.1 * size_x)))
-		y_right = random.randint(int(round(first_y + 0.1 * size_y)), int(round(last_y - 0.1 * size_y)))
+		x_top   = random.randint(to_int(first_x + 0.1 * size_x), to_int(last_x - 0.1 * size_x))
+		y_left  = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.1 * size_y))
+		x_down  = random.randint(to_int(first_x + 0.1 * size_x), to_int(last_x - 0.1 * size_x))
+		y_right = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.1 * size_y))
 
 		pts = np.array(((x_top, last_y), (last_x, y_right), (x_down, first_y), (first_x,y_left)), dtype=int)
 		cv2.fillConvexPoly(overlay, pts, color)
@@ -132,17 +124,17 @@ def black_tree(picture, label, lo = 2, hi = 15):
 
 	for i in range(number_of_patches):
 
-		(red,green,blue) = random.random(3)
-		red   = check_val(to_int(red  *20))
-		green = check_val(to_int(green*20))
-		blue  = check_val(to_int(blue *20))
+		(red, green, blue) = random.randint(0, 21, size = 3) #верхняя граница не входит
+		red   = int(red)
+		green = int(green)
+		blue  = int(blue)
 		color = [blue, green, red]
 
 		is_intersection = True
 
 		count = 0
 		while(is_intersection):
-			forfeit = int(round(20 / 10000 * count))
+			forfeit = to_int(20 / 10000 * count)
 
 			(first_y,first_x) = random.random(2)
 			(size_x, size_y) =  random.random(2)
@@ -176,12 +168,12 @@ def black_tree(picture, label, lo = 2, hi = 15):
 		min_y = min(min_y, first_y, last_y)
 		max_y = max(max_y, first_y, last_y)
 
-		x_top   = random.randint(int(round(first_x + 0.2 * size_x)), int(round(last_x - 0.2 * size_x)))
-		y_left_1  = random.randint(int(round(first_y + 0.1 * size_y)), int(round(last_y - 0.5 * size_y)))
-		y_left_2  = random.randint(int(round(first_y + 0.5 * size_y)), int(round(last_y - 0.1 * size_y)))
-		x_down  = random.randint(int(round(first_x + 0.2 * size_x)), int(round(last_x - 0.2 * size_x)))
-		y_right_1 = random.randint(int(round(first_y + 0.5 * size_y)), int(round(last_y - 0.1 * size_y)))
-		y_right_2 = random.randint(int(round(first_y + 0.1 * size_y)), int(round(last_y - 0.5 * size_y)))
+		x_top     = random.randint(to_int(first_x + 0.2 * size_x), to_int(last_x - 0.2 * size_x))
+		y_left_1  = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.5 * size_y))
+		y_left_2  = random.randint(to_int(first_y + 0.5 * size_y), to_int(last_y - 0.1 * size_y))
+		x_down    = random.randint(to_int(first_x + 0.2 * size_x), to_int(last_x - 0.2 * size_x))
+		y_right_1 = random.randint(to_int(first_y + 0.5 * size_y), to_int(last_y - 0.1 * size_y))
+		y_right_2 = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.5 * size_y))
 
 		pts = np.array(((x_top, last_y), (last_x, y_right_1), (last_x, y_right_2),(x_down, first_y), (first_x,y_left_1), (first_x,y_left_2)), dtype=int)
 		cv2.fillConvexPoly(overlay, pts, color)
