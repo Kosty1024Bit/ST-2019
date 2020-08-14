@@ -23,9 +23,12 @@ def check_val(value):
 
 def intersection_check(list_coordinate, point1, point2):
 	for (point_l_1, point_l_2) in list_coordinate:
-		if not ((point1[1] < point_l_2[1] or point2[1] < point_l_1[1]) and (point2[0] < point_l_1[0] or point1[0] > point_l_2[0])):
+		if not ((point1[1] < point_l_2[1] or point2[1] > point_l_1[1]) and (point2[0] < point_l_1[0] or point1[0] > point_l_2[0])):
 				return True
 	return False
+
+def to_int(value):
+	return int(round(value))
 
 
 def white_square(picture, label, lo = 2, hi = 15):
@@ -45,34 +48,39 @@ def white_square(picture, label, lo = 2, hi = 15):
 
 	for i in range(number_of_patches):
 
-
-		red = check_val(random.randint(240,256))
-		green = check_val(random.randint(240,256))
-		blue = check_val(random.randint(240,256))
+		(red,green,blue) = random.random(3)
+		red   = check_val(to_int(red   * (255 - 240) + 240))
+		green = check_val(to_int(green * (256 - 240) + 240))
+		blue  = check_val(to_int(blue  * (256 - 240) + 240))
 		color = [blue, green, red]
 
 		is_intersection = True
 
 		count = 0
 		while(is_intersection):
+			random.seed()
 			forfeit = int(round(20 / 10000 * count))
 
-			size_x = random.randint(25 - forfeit, 80 - forfeit)
-			size_y = random.randint(25 - forfeit, 80 - forfeit)
-			count += 1
-			first_y = random.randint(int(height* 0.1), int(height*0.8))
-			first_x = random.randint(int(width * 0.1), int(width *0.8))
+			(first_x,first_y) = random.random(2)
+			(size_x, size_y) =  random.random(2)
 
+			size_x = to_int(size_x * (55 - forfeit) + 25 - forfeit)
+			size_y = to_int(size_y * (55 - forfeit) + 25 - forfeit)
+
+			first_y = to_int(first_y * (height*0.7) + height* 0.1) #(int(height* 0.1), int(height*0.8))
+			first_x = to_int(first_x * (width *0.7) + width * 0.1)
+
+			count += 1
 			last_y = min(first_y + size_x, height - 1)
 			last_x = min(first_x + size_y, width - 1)
 
 			if(count < 10000):
 				is_intersection = intersection_check(list_coordinate_rectangle, [first_x, first_y], [last_x, last_y])
+
 			else:
 				is_intersection = False
 				print(list_coordinate_rectangle)
 				print("out with ", first_x, first_y, last_x, last_y)
-
 		list_coordinate_rectangle.append([[first_x,first_y], [last_x, last_y]])
 
 		#на случай, если фигура не вписывается в картинку
@@ -109,6 +117,7 @@ def white_square(picture, label, lo = 2, hi = 15):
 def black_tree(picture, label, lo = 2, hi = 15):
 	height = picture.shape[0]
 	width = picture.shape[1]
+
 	number_of_patches = random.randint(lo,hi+1)
 
 	overlay = picture.copy()
@@ -123,10 +132,10 @@ def black_tree(picture, label, lo = 2, hi = 15):
 
 	for i in range(number_of_patches):
 
-
-		red = check_val(random.randint(0,20))
-		green = check_val(random.randint(0,20))
-		blue = check_val(random.randint(0,20))
+		(red,green,blue) = random.random(3)
+		red   = check_val(to_int(red  *20))
+		green = check_val(to_int(green*20))
+		blue  = check_val(to_int(blue *20))
 		color = [blue, green, red]
 
 		is_intersection = True
@@ -135,11 +144,15 @@ def black_tree(picture, label, lo = 2, hi = 15):
 		while(is_intersection):
 			forfeit = int(round(20 / 10000 * count))
 
-			size_x = random.randint(25 - forfeit, 60 - forfeit)
-			size_y = random.randint(40 - forfeit, 60 - forfeit)
+			(first_y,first_x) = random.random(2)
+			(size_x, size_y) =  random.random(2)
+			size_x = to_int(size_x * (30 - forfeit) + 25 - forfeit)
+			size_y = to_int(size_y * (30 - forfeit) + 30 - forfeit)
+
+			first_y = to_int(first_y * (height*0.7) + height* 0.1) #(int(height* 0.1), int(height*0.8))
+			first_x = to_int(first_x * (width *0.7) + width * 0.1)
+
 			count += 1
-			first_y = random.randint(int(height* 0.1), int(height*0.8))
-			first_x = random.randint(int(width * 0.1), int(width *0.8))
 
 			last_y = min(first_y + size_x, height - 1)
 			last_x = min(first_x + size_y, width - 1)
