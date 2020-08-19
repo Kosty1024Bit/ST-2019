@@ -793,6 +793,8 @@ if __name__ == '__main__':
 	parser.add_argument('-ofj', '--output_full_json', dest = 'output_foldername_full_json')
 	parser.add_argument('-orj', '--output_region_json', dest = 'output_foldername_region_json')
 
+	parser.add_argument('-bf', '--boolean_flag', dest = 'boolean_flag')
+
 
 	options = parser.parse_args()
 	global arg1, arg2, x0, y0, x1, y1, is_output_resized, new_height, new_width
@@ -814,6 +816,11 @@ if __name__ == '__main__':
 		is_output_resized = True
 		new_height = int(options.new_height)
 		new_width = int(options.new_width)
+
+	if options.boolean_flag == 'True' or options.boolean_flag == 'true':
+		bool_flag = True
+	else:
+		bool_flag = False
 
 #было закоменчено, видимо не закончено
 	# if options.output_type == 'video' or options.output_type == 'Video':
@@ -1313,9 +1320,9 @@ if __name__ == '__main__':
 
 			if options.glitch_type == 'white_square':
 				if is_bound_specified:
-					new_list = addition_glitch.white_square(img, "1", arg1, arg2)
+					new_list = addition_glitch.white_square(img, "1", bool_flag, arg1, arg2)
 				else:
-					new_list = addition_glitch.white_square(img, "1")
+					new_list = addition_glitch.white_square(img, "1", bool_flag)
 
 				output_name = str(count) + "_white_square"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
@@ -1332,9 +1339,9 @@ if __name__ == '__main__':
 
 			if options.glitch_type == 'black_tree':
 				if is_bound_specified:
-					new_list = addition_glitch.black_tree(img, "1", arg1, arg2)
+					new_list = addition_glitch.black_tree(img, "1", bool_flag, arg1, arg2)
 				else:
-					new_list = addition_glitch.black_tree(img, "1")
+					new_list = addition_glitch.black_tree(img, "1", bool_flag)
 
 				output_name = str(count) + "_black_tree"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")

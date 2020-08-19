@@ -22,7 +22,7 @@ def to_int(value):
 	return int(round(value))
 
 
-def white_square(picture, label, lo = 2, hi = 15):
+def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 	height = picture.shape[0]
 	width = picture.shape[1]
 	number_of_patches = random.randint(lo,hi+1)
@@ -36,6 +36,7 @@ def white_square(picture, label, lo = 2, hi = 15):
 	min_y = height
 
 	list_coordinate_rectangle = []
+	count_fail = 0
 
 	for i in range(number_of_patches):
 
@@ -50,34 +51,40 @@ def white_square(picture, label, lo = 2, hi = 15):
 
 		count = 0
 		while(is_intersection):
-			forfeit = to_int(20 / 10000 * count)
+			forfeit = min((600 / 10000 * count), 300)
+			forfeit2 = (30 / 10000 * count)
 
 			(first_x,first_y) = random.random(2)
 			(size_x, size_y) =  random.random(2)
 
-			size_x = to_int(size_x * (55 - forfeit) + 25 - forfeit)
-			size_y = to_int(size_y * (55 - forfeit) + 25 - forfeit)
+			size_x = to_int(size_x * (300 - forfeit) + 80 - forfeit2)
+			size_y = to_int(size_y * (300 - forfeit) + 80 - forfeit2)
 
 			first_y = to_int(first_y * (height*0.7) + height* 0.1) #(int(height* 0.1), int(height*0.8))
 			first_x = to_int(first_x * (width *0.7) + width * 0.1)
 
-			count += 1
 			last_y = min(first_y + size_x, height - 1)
 			last_x = min(first_x + size_y, width - 1)
 
+			#на случай, если фигура не вписывается в картинку
+			size_x = last_x - first_x
+			size_y = last_y - first_y
+
+			if(size_x > 2 * size_y or size_y > 2 * size_x):
+				#print ("cont")
+				continue
+
+			count += 1
+
+			if allow_intersections:
+				break
 			if(count < 10000):
 				is_intersection = intersection_check(list_coordinate_rectangle, [first_x, first_y], [last_x, last_y])
-
 			else:
 				is_intersection = False
-				print(list_coordinate_rectangle)
-				print("out with ", first_x, first_y, last_x, last_y)
+				count_fail += 1
 
 		list_coordinate_rectangle.append([[first_x,first_y], [last_x, last_y]])
-
-		#на случай, если фигура не вписывается в картинку
-		size_x = last_x - first_x
-		size_y = last_y - first_y
 
 		min_x = min(min_x, first_x, last_x)
 		max_x = max(max_x, first_x, last_x)
@@ -85,10 +92,18 @@ def white_square(picture, label, lo = 2, hi = 15):
 		min_y = min(min_y, first_y, last_y)
 		max_y = max(max_y, first_y, last_y)
 
-		x_top   = random.randint(to_int(first_x + 0.1 * size_x), to_int(last_x - 0.1 * size_x))
-		y_left  = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.1 * size_y))
-		x_down  = random.randint(to_int(first_x + 0.1 * size_x), to_int(last_x - 0.1 * size_x))
-		y_right = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.1 * size_y))
+		rotat = random.randint(0,2)
+
+		if rotat == 0:
+			x_top   = random.randint(first_x, to_int(last_x - 0.5 * size_x))
+			y_left  = random.randint(first_y, to_int(last_y - 0.5 * size_y))
+			x_down  = min(last_x + first_x - x_top  + random.randint(-to_int(size_x * 0.1)-1, to_int(size_x * 0.1)), last_x)
+			y_right = min(last_y + first_y - y_left + random.randint(-to_int(size_y * 0.1)-1, to_int(size_y * 0.1)), last_y)
+		else :
+			x_top   = random.randint(to_int(first_x + 0.5 * size_x), last_x)
+			y_left  = random.randint(to_int(first_y + 0.5 * size_y), last_y)
+			x_down  = max(last_x + first_x - x_top  + random.randint(-to_int(size_x * 0.1), to_int(size_x * 0.1)+1) , first_x)
+			y_right = max(last_y + first_y - y_left + random.randint(-to_int(size_y * 0.1), to_int(size_y * 0.1)+1), first_y)
 
 		pts = np.array(((x_top, last_y), (last_x, y_right), (x_down, first_y), (first_x,y_left)), dtype=int)
 		cv2.fillConvexPoly(overlay, pts, color)
@@ -96,6 +111,9 @@ def white_square(picture, label, lo = 2, hi = 15):
 		f_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, last_y]], None, "rectangle", {})
 
 		f_json_list.append(f_shapes.to_string_form())
+
+	if not count_fail == 0:
+		 print (count_fail)
 
 	alpha = 1
 	cv2.addWeighted(overlay, alpha, pic, 1 - alpha, 0, pic)
@@ -106,7 +124,7 @@ def white_square(picture, label, lo = 2, hi = 15):
 
 
 
-def black_tree(picture, label, lo = 2, hi = 15):
+def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 	height = picture.shape[0]
 	width = picture.shape[1]
 
@@ -122,6 +140,7 @@ def black_tree(picture, label, lo = 2, hi = 15):
 
 	list_coordinate_rectangle = []
 
+	count_fail = 0
 	for i in range(number_of_patches):
 
 		(red, green, blue) = random.randint(0, 21, size = 3) #верхняя граница не входит
@@ -138,8 +157,8 @@ def black_tree(picture, label, lo = 2, hi = 15):
 
 			(first_y,first_x) = random.random(2)
 			(size_x, size_y) =  random.random(2)
-			size_x = to_int(size_x * (30 - forfeit) + 25 - forfeit)
-			size_y = to_int(size_y * (30 - forfeit) + 30 - forfeit)
+			size_x = to_int(size_x * (300 - forfeit) + 25 - forfeit)
+			size_y = to_int(size_y * (350 - forfeit) + 30 - forfeit)
 
 			first_y = to_int(first_y * (height*0.7) + height* 0.1) #(int(height* 0.1), int(height*0.8))
 			first_x = to_int(first_x * (width *0.7) + width * 0.1)
@@ -149,12 +168,13 @@ def black_tree(picture, label, lo = 2, hi = 15):
 			last_y = min(first_y + size_x, height - 1)
 			last_x = min(first_x + size_y, width - 1)
 
+			if allow_intersections:
+				break
 			if(count < 10000):
 				is_intersection = intersection_check(list_coordinate_rectangle, [first_x, first_y], [last_x, last_y])
 			else:
 				is_intersection = False
-				print(list_coordinate_rectangle)
-				print("out with ", first_x, first_y, last_x, last_y)
+				count_fail += 1
 
 		list_coordinate_rectangle.append([[first_x,first_y], [last_x, last_y]])
 
@@ -182,6 +202,8 @@ def black_tree(picture, label, lo = 2, hi = 15):
 
 		f_json_list.append(f_shapes.to_string_form())
 
+	if not count_fail == 0:
+		 print (count_fail)
 	alpha = 1
 	cv2.addWeighted(overlay, alpha, pic, 1 - alpha, 0, pic)
 	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
