@@ -22,3 +22,8 @@ D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users
 
 
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t white_square -fj true -ofj C:\Users\Nikolay\Desktop\work\out -rj true -orj C:\Users\Nikolay\Desktop\work\out
+
+
+
+
+C:\Users\Nikolay\ST-2019\Glitchify>C:\Users\Nikolay\ST-2019\Glitchify>D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i "D:\contours_glitch\Fortnite_Battle_Royale" -o D:\contours_glitch\img -ofj D:\contours_glitch\json_f -orj D:\contours_glitch\json_r -t random_patch 

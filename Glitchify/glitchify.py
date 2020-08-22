@@ -20,6 +20,7 @@ from itertools import tee
 from common_file import labelMe_class
 from common_file.tree_return_class import TreeRet
 import math
+import time
 
 def get_random_color():
 	b_int = npr.randint(0,256)
@@ -459,10 +460,10 @@ def add_shapes(im, label, lo = 2, hi = 5):
 
 def add_triangles(im, label, lo = 1, hi = 3):
 	h, w, _ = im.shape
-	colors = np.array((
-                   (250,206,135),
-                   (153,255, 255),
-                   (255, 203, 76)),dtype = int) #maybe expand this list of colors
+# 	colors = np.array((
+#                    (250,206,135),
+#                    (153,255, 255),
+#                    (255, 203, 76)),dtype = int) #maybe expand this list of colors
 
 	output = im.copy()
 	overlay = im.copy()
@@ -553,10 +554,10 @@ def color_blend(img, overlay1, overlay2, angle = 0):
 
 	img = imutils.rotate_bound(img, -1 * angle)
 
-	cv2.imshow ("overlay1", overlay1)
-	cv2.imshow ("overlay2", overlay2)
-	cv2.imshow ("img",img)
-	cv2.waitKey()
+# 	cv2.imshow ("overlay1", overlay1)
+# 	cv2.imshow ("overlay2", overlay2)
+# 	cv2.imshow ("img",img)
+# 	cv2.waitKey()
 
 
 	return img
@@ -648,8 +649,9 @@ def add_shaders(im, label, lo = 1, hi = 3):
 		colors = np.clip(colors, a_min = 0, a_max = 255)
 
 
-		f_shapes = labelMe_class.Shapes("2", [[start_x, start_y], [mid_x, mid_y]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
+		#f_shapes = labelMe_class.Shapes("2", [[start_x, start_y], [mid_x, mid_y]], None, "rectangle", {})
+		#f_json_list.append(f_shapes.to_string_form())
+
 		# colors[0,:] = npr.randint(0, 256, size = 3)
 		# colors[1,:] = colors[0,:] + npr.randint(0, 100, size = 3)
 		# colors[1,:] = np.clip(colors[1,:], 0, 255)
@@ -935,6 +937,8 @@ if __name__ == '__main__':
 			if is_image:
 				ret = True
 				original_img = cv2.imread(os.path.join(options.input_foldername, video_path))
+				if original_img is None:
+					print ("open error video_path ", video_path)
 			else:
 				ret, original_img = cap.read()
 				if not ret:
@@ -948,7 +952,7 @@ if __name__ == '__main__':
 			if this_count % interval != 0:
 				this_count += 1
 				if save_normal_frames:
-					output_name = str(count) + "_normal.png"
+					output_name = str(count) + "_" + str(time.time()) + "_normal.png"
 					if is_video:
 						output_name = str(count)  + '_' + str(this_count)+ "_normal.png"
 					output_filename = os.path.join(options.output_foldername, 'normal')
@@ -965,7 +969,7 @@ if __name__ == '__main__':
 				prev_img = img
 
 			if options.glitch_type is None:
-				output_name = str(count) + "_normal.png"
+				output_name = str(count) + "_" + str(time.time()) + "_normal.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
 				write_files(original_img, img, is_margin_specified, output_filename, out, is_video, True)
 				# X_orig_list.append()
@@ -983,7 +987,7 @@ if __name__ == '__main__':
 				if this_count == 0:
 					this_count += 1
 					if save_normal_frames:
-						output_name = str(count) + "_normal.png"
+						output_name = str(count) + "_" + str(time.time()) + "_normal.png"
 						if is_video:
 							output_name = str(count)  + '_' + str(this_count)+ "_normal.png"
 						output_filename = os.path.join(options.output_foldername, 'normal')
@@ -1022,7 +1026,7 @@ if __name__ == '__main__':
 					new_img[:, 0:target_width[0], :] = prev_img[:, 0:target_width[0], :]
 
 				prev_img = img
-				output_name = str(count) + "_screen_tearing.png"
+				output_name = str(count) + "_" + str(time.time()) + "_screen_tearing.png"
 				output_filename = os.path.join(options.output_foldername, output_name)
 				write_files(original_img, new_img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
@@ -1032,7 +1036,7 @@ if __name__ == '__main__':
 				# print(img.shape)
 				new_list = create_desktop_glitch_one(img, "1")
 
-				output_name = str(count) + "_desktop_glitch_one"
+				output_name = str(count) + "_" + str(time.time()) + "_desktop_glitch_one"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1048,7 +1052,7 @@ if __name__ == '__main__':
 			if options.glitch_type == "desktop_glitch_two":
 				new_list = create_desktop_glitch_two(img, "1")
 
-				output_name = str(count) + "_desktop_glitch_two"
+				output_name = str(count) + "_" + str(time.time()) + "_desktop_glitch_two"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1065,7 +1069,7 @@ if __name__ == '__main__':
 				# print(img.shape)
 				new_list = create_discoloration(img, "1")
 
-				output_name = str(count) + "_discoloration"
+				output_name = str(count) + "_" + str(time.time()) + "_discoloration"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1080,12 +1084,18 @@ if __name__ == '__main__':
 					count += 1
 
 			if options.glitch_type == "random_patch":
-				if is_bound_specified:
-					new_list = add_random_patches(img, "1", arg1, arg2)
+				if not bool_flag:
+					if is_bound_specified:
+						new_list = addition_glitch.add_random_patches_mods(img, "1", arg1, arg2)
+					else:
+						new_list = addition_glitch.add_random_patches_mods(img, "1")
 				else:
-					new_list = add_random_patches(img, "1")
+					if is_bound_specified:
+						new_list = add_random_patches(img, "1", arg1, arg2)
+					else:
+						new_list = add_random_patches(img, "1")
 
-				output_name = str(count) + "_random_patch"
+				output_name = str(count) + "_" + str(time.time()) + "_random_patch"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1104,7 +1114,7 @@ if __name__ == '__main__':
 				else:
 					new_list = add_shapes(img, "1")
 
-				output_name = str(count) + "_shape"
+				output_name = str(count) + "_" + str(time.time()) + "_shape"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1123,7 +1133,7 @@ if __name__ == '__main__':
 				else:
 					new_list = add_triangles(img, "1")
 
-				output_name = str(count) + "_triangle"
+				output_name = str(count) + "_" + str(time.time()) + "_triangle"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1143,7 +1153,7 @@ if __name__ == '__main__':
 				else:
 					new_list = add_shaders(img, "1")
 
-				output_name = str(count) + "_shader"
+				output_name = str(count) + "_" + str(time.time()) + "_shader"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1162,7 +1172,7 @@ if __name__ == '__main__':
 				else:
 					new_list = og.dotted_lines(img, "1")
 
-				output_name = str(count) + "_dotted_line"
+				output_name = str(count) + "_" + str(time.time()) + "_dotted_line"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1181,7 +1191,7 @@ if __name__ == '__main__':
 				else:
 					new_list = og.dotted_lines_radial(img, "1")
 
-				output_name = str(count) + "_radial_dotted_line"
+				output_name = str(count) + "_" + str(time.time()) + "_radial_dotted_line"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1200,7 +1210,7 @@ if __name__ == '__main__':
 				else:
 					new_list = og.parallel_lines(img, "1")
 
-				output_name = str(count) + "_parallel_line"
+				output_name = str(count) + "_" + str(time.time()) + "_parallel_line"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1220,7 +1230,7 @@ if __name__ == '__main__':
 				else:
 					new_list = og.square_patches(img, "1")
 
-				output_name = str(count) + "_square_patch"
+				output_name = str(count) + "_" + str(time.time()) + "_square_patch"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1237,7 +1247,7 @@ if __name__ == '__main__':
 			if options.glitch_type == 'texture_popin':
 				new_list = blurring(img, "1")
 
-				output_name = str(count) + "_texture_popin"
+				output_name = str(count) + "_" + str(time.time()) + "_texture_popin"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1257,7 +1267,7 @@ if __name__ == '__main__':
 			if options.glitch_type == 'regular_triangulation':
 				new_list = triangulation(img, "1")
 
-				output_name = str(count) + "_regular_triangulation"
+				output_name = str(count) + "_" + str(time.time()) + "_regular_triangulation"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1273,7 +1283,7 @@ if __name__ == '__main__':
 			if options.glitch_type == 'morse_code':
 				new_list = add_vertical_pattern(img, "1")
 
-				output_name = str(count) + "_morse_code"
+				output_name = str(count) + "_" + str(time.time()) + "_morse_code"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1289,7 +1299,7 @@ if __name__ == '__main__':
 			if options.glitch_type == 'stuttering':
 				new_list = produce_stuttering(img, "1")
 
-				output_name = str(count) + "_stuttering"
+				output_name = str(count) + "_" + str(time.time()) + "_stuttering"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1305,7 +1315,7 @@ if __name__ == '__main__':
 			if options.glitch_type == 'line_pixelation':
 				new_list = line_pixelation(img, "1")
 
-				output_name = str(count) + "_line_pixelation"
+				output_name = str(count) + "_" + str(time.time()) + "_line_pixelation"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1324,7 +1334,7 @@ if __name__ == '__main__':
 				else:
 					new_list = addition_glitch.white_square(img, "1", bool_flag)
 
-				output_name = str(count) + "_white_square"
+				output_name = str(count) + "_" + str(time.time()) + "_white_square"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
@@ -1343,7 +1353,7 @@ if __name__ == '__main__':
 				else:
 					new_list = addition_glitch.black_tree(img, "1", bool_flag)
 
-				output_name = str(count) + "_black_tree"
+				output_name = str(count) + "_" + str(time.time()) + "_black_tree"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)

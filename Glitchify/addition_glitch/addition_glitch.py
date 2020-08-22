@@ -21,6 +21,12 @@ def intersection_check(list_coordinate, point1, point2):
 def to_int(value):
 	return int(round(value))
 
+def get_random_color():
+	b_int = random.randint(0,256)
+	g_int = random.randint(0,256)
+	r_int = random.randint(0,256)
+	return b_int, g_int, r_int
+
 
 def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 	height = picture.shape[0]
@@ -63,8 +69,8 @@ def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 			first_y = to_int(first_y * (height*0.7) + height* 0.1) #(int(height* 0.1), int(height*0.8))
 			first_x = to_int(first_x * (width *0.7) + width * 0.1)
 
-			last_y = min(first_y + size_x, height - 1)
-			last_x = min(first_x + size_y, width - 1)
+			last_y = min(first_y + size_y, height - 1)
+			last_x = min(first_x + size_x, width - 1)
 
 			#на случай, если фигура не вписывается в картинку
 			size_x = last_x - first_x
@@ -153,20 +159,30 @@ def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 
 		count = 0
 		while(is_intersection):
-			forfeit = to_int(20 / 10000 * count)
+			forfeit = min((300 / 10000 * count), 100)
+			forfeit2 = (20 / 10000 * count)
 
 			(first_y,first_x) = random.random(2)
 			(size_x, size_y) =  random.random(2)
-			size_x = to_int(size_x * (300 - forfeit) + 25 - forfeit)
-			size_y = to_int(size_y * (350 - forfeit) + 30 - forfeit)
+
+			size_y = to_int(size_y * (150 - forfeit) + 40 - forfeit2)
+			size_x = to_int(size_x * (100 - forfeit) + 40 - forfeit2)
 
 			first_y = to_int(first_y * (height*0.7) + height* 0.1) #(int(height* 0.1), int(height*0.8))
 			first_x = to_int(first_x * (width *0.7) + width * 0.1)
 
-			count += 1
 
-			last_y = min(first_y + size_x, height - 1)
-			last_x = min(first_x + size_y, width - 1)
+			last_y = min(first_y + size_y, height - 1)
+			last_x = min(first_x + size_x, width - 1)
+
+			#на случай, если фигура не вписывается в картинку
+			size_y = last_y - first_y
+			size_x = last_x - first_x
+
+			if size_x > size_y or size_y < 20 or size_x < 20:
+				continue
+
+			count += 1
 
 			if allow_intersections:
 				break
@@ -177,10 +193,6 @@ def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 				count_fail += 1
 
 		list_coordinate_rectangle.append([[first_x,first_y], [last_x, last_y]])
-
-		#на случай, если фигура не вписывается в картинку
-		size_x = last_x - first_x
-		size_y = last_y - first_y
 
 		min_x = min(min_x, first_x, last_x)
 		max_x = max(max_x, first_x, last_x)
@@ -209,5 +221,104 @@ def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
 
 	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])
+	return res
+
+
+
+def add_random_patches_mods(img, label, lo = 3, hi = 20):
+	imgray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	im = img.copy()
+
+	ret, thresh = cv2.threshold(imgray, 127, 255, 0)
+	contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+	contours.sort(key = len)
+	patch_number = np.random.randint(lo, hi+1)
+	print (patch_number)
+	min_x = imgray.shape[1]
+	max_x = 0
+
+	min_y = imgray.shape[0]
+	max_y = 0
+
+	f_json_list = []
+
+	offset = 1
+
+	for i in range(patch_number):
+		color = random.randint(0, 7)
+		intens_color =  np.random.randint(128,256)
+		if color == 0:
+			cv2.drawContours(img, contours,len(contours) - 1 - i - offset , (0,0,intens_color), -1)
+		elif color == 1:
+			cv2.drawContours(img, contours,len(contours) - 1 - i - offset , (0,intens_color,0), -1)
+		elif color == 2:
+			cv2.drawContours(img, contours,len(contours) - 1 - i - offset , (intens_color,0,0), -1)
+		elif color == 3:
+
+			ret, im_gray_mask = cv2.threshold(imgray, 255, 255, 0)
+
+			# 	cv2.imshow ("img",im_gray_mask)
+			# 	cv2.waitKey()
+
+			cv2.drawContours(im_gray_mask, contours, len(contours) - 1 - i - offset , 255, -1)
+
+			count_pixel = 0
+
+			sum_r_color = 0
+			sum_g_color = 0
+			sum_b_color = 0
+
+			h,w, _ = img.shape
+			for y in range(0, h):
+				for x in range(0, w):
+					if im_gray_mask[y,x] == 255:
+						count_pixel += 1
+						(b,g,r) = im[y,x]
+						sum_b_color += b
+						sum_g_color += g
+						sum_r_color += r
+
+			if count_pixel != 0:
+				sum_b_color /= count_pixel
+				sum_g_color /= count_pixel
+				sum_r_color /= count_pixel
+			else:
+				print("Div zero")
+			cv2.drawContours(img, contours,len(contours) - 1 - i - offset , (sum_b_color,sum_g_color,sum_r_color), -1)
+
+		else:
+			b_int, g_int, r_int = get_random_color()
+			cv2.drawContours(img, contours,len(contours) - 1 - i - offset , (b_int,g_int,r_int), -1)
+
+		contour = contours[len(contours) - 1 - i - offset]
+
+		(x,y) = contour[0,0]
+		min_x_c = x
+		max_x_c = x
+
+		min_y_c = y
+		max_y_c = y
+		for point in contour:
+			(x_c, y_c) = point[0]
+
+			min_x_c = int(min(min_x_c, x_c))
+			max_x_c = int(max(max_x_c, x_c))
+
+			min_y_c = int(min(min_y_c, y_c))
+			max_y_c = int(max(max_y_c, y_c))
+
+		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
+		f_json_list.append(f_shapes.to_string_form())
+
+		min_x = min(min_x, min_x_c)
+		max_x = max(max_x, max_x_c)
+
+		min_y = min(min_y, min_y_c)
+		max_y = max(max_y, max_y_c)
+
+	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
+	res = TreeRet(img, f_json_list, [r_shapes.to_string_form()])
+
 	return res
 
