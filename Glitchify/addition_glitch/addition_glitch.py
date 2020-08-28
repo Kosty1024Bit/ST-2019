@@ -98,9 +98,9 @@ def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 		min_y = min(min_y, first_y, last_y)
 		max_y = max(max_y, first_y, last_y)
 
-		rotat = random.randint(0,2)
+		orientation = random.randint(0,2)
 
-		if rotat == 0:
+		if orientation == 0:
 			x_top   = random.randint(first_x, to_int(last_x - 0.5 * size_x))
 			y_left  = random.randint(first_y, to_int(last_y - 0.5 * size_y))
 			x_down  = min(last_x + first_x - x_top  + random.randint(-to_int(size_x * 0.1)-1, to_int(size_x * 0.1)), last_x)
@@ -128,6 +128,70 @@ def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])
 	return res
 
+def create_tree(point_1, point_2):
+	(first_x, first_y) = point_1
+	(last_x, last_y) = point_2
+
+	conturs = np.array([[1, 2]], dtype=int)
+
+	#1 divided by number = probability of drawing a tree stump
+	is_stump = random.randint(0, 10) # 10%
+
+	w_05 = to_int((last_x - first_x)/2)
+	h = last_y - first_y
+
+	if (is_stump == 0):
+		if (w_05 > 20):
+			ps1_x = random.randint(to_int(3/4*w_05), w_05-4)
+		else:
+			ps1_x = random.randint(5 + to_int(3/4*w_05), w_05+6)
+
+		ps2_y = random.randint(3 + to_int(0.05 * h), to_int(0.1 * h)+4)
+
+		conturs = np.array(((last_x - ps1_x, last_y - ps2_y), (last_x - ps1_x, last_y)), dtype=int)
+
+		conturs = np.append(conturs, [[first_x + ps1_x, last_y]], axis = 0)
+		conturs = np.append(conturs, [[first_x + ps1_x, last_y - ps2_y]], axis = 0)
+
+	else:
+		nps_x = random.randint(to_int(1/2*w_05), w_05+1)
+
+		conturs = np.array(((last_x - nps_x, last_y),(first_x + nps_x, last_y)), dtype=int)
+
+
+	point1_y = random.randint(to_int(0.1 * h), to_int(0.3 * h)+1)
+	point2_y = random.randint(to_int(0.3 * h), to_int(0.35 * h)+1)
+
+	point3_y = random.randint(to_int(0.45 * h), to_int(0.5 * h)+1)
+	point3_x = random.randint(0, to_int(0.5 * w_05)+1)
+
+	point4_y = random.randint(to_int(0.5 * h), to_int(0.55 * h)+2)
+	point4_x = random.randint(0, to_int(0.5 * w_05)+1)
+
+	point5_y = random.randint(to_int(0.55 * h), to_int(0.7 * h)+1)
+	point6_y = random.randint(to_int(0.7 * h), to_int(0.9 * h)+1)
+
+	point7_x = random.randint(to_int(0.7 * w_05), w_05+1)
+
+	conturs = np.append(conturs, [[first_x,				 last_y - point1_y]], axis = 0)
+	conturs = np.append(conturs, [[first_x,				 last_y - point2_y]], axis = 0)
+	conturs = np.append(conturs, [[first_x + point3_x,	 last_y - point3_y]], axis = 0)
+	conturs = np.append(conturs, [[first_x + point4_x,	 last_y - point4_y]], axis = 0)
+	conturs = np.append(conturs, [[first_x, 			 last_y - point5_y]], axis = 0)
+	conturs = np.append(conturs, [[first_x,				 last_y - point6_y]], axis = 0)
+	conturs = np.append(conturs, [[first_x + point7_x,   first_y]]			, axis = 0)
+
+
+	#symmetrical from the middle
+	conturs = np.append(conturs, [[last_x - point7_x,    first_y]]			, axis = 0)
+	conturs = np.append(conturs, [[last_x ,				 last_y - point6_y]], axis = 0)
+	conturs = np.append(conturs, [[last_x , 			 last_y - point5_y]], axis = 0)
+	conturs = np.append(conturs, [[last_x  - point4_x,	 last_y - point4_y]], axis = 0)
+	conturs = np.append(conturs, [[last_x  - point3_x,	 last_y - point3_y]], axis = 0)
+	conturs = np.append(conturs, [[last_x ,				 last_y - point2_y]], axis = 0)
+	conturs = np.append(conturs, [[last_x ,				 last_y - point1_y]], axis = 0)
+
+	return conturs
 
 
 def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
@@ -200,15 +264,9 @@ def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 		min_y = min(min_y, first_y, last_y)
 		max_y = max(max_y, first_y, last_y)
 
-		x_top     = random.randint(to_int(first_x + 0.2 * size_x), to_int(last_x - 0.2 * size_x))
-		y_left_1  = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.5 * size_y))
-		y_left_2  = random.randint(to_int(first_y + 0.5 * size_y), to_int(last_y - 0.1 * size_y))
-		x_down    = random.randint(to_int(first_x + 0.2 * size_x), to_int(last_x - 0.2 * size_x))
-		y_right_1 = random.randint(to_int(first_y + 0.5 * size_y), to_int(last_y - 0.1 * size_y))
-		y_right_2 = random.randint(to_int(first_y + 0.1 * size_y), to_int(last_y - 0.5 * size_y))
+		contur = create_tree([first_x, first_y], [last_x, last_y])
 
-		pts = np.array(((x_top, last_y), (last_x, y_right_1), (last_x, y_right_2),(x_down, first_y), (first_x,y_left_1), (first_x,y_left_2)), dtype=int)
-		cv2.fillConvexPoly(overlay, pts, color)
+		cv2.fillConvexPoly(overlay, contur, color)
 
 		f_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, last_y]], None, "rectangle", {})
 
@@ -225,7 +283,7 @@ def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 
 
 
-def add_random_patches_mods(img, label, lo = 3, hi = 20):
+def add_random_patches_mods(img, label, lo = 3, hi = 10):
 	imgray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	im = img.copy()
 
@@ -320,5 +378,53 @@ def add_random_patches_mods(img, label, lo = 3, hi = 20):
 	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
 	res = TreeRet(img, f_json_list, [r_shapes.to_string_form()])
 
+	return res
+
+def check_val(value):
+	if value > 255:
+		value = 255
+	if value < 0:
+		value = 0
+	return value
+
+def color_cast(picture, label, allow_intersections, lo = 64, hi = 127):
+	pic = picture.copy()
+	h, w, _ = picture.shape
+
+	chanal = random.randint(0,7)
+	# может 128 ?
+	rand_minus_color_value, rand_minus_color_value2 = random.randint(lo, hi+1, size = 2)
+
+	#2/7 портит 1 канал, 1/7 портит 2
+	if chanal == 0 or chanal == 1:
+		for y in range(0, h):
+				for x in range(0, w):
+					pic[y,x][0] = check_val(pic[y,x][0] - rand_minus_color_value)
+
+	elif chanal == 2 or chanal == 3:
+		for y in range(0, h):
+				for x in range(0, w):
+					pic[y,x][1] = check_val(pic[y,x][1] - rand_minus_color_value)
+
+	elif chanal == 4 or chanal == 5:
+		for y in range(0, h):
+				for x in range(0, w):
+					pic[y,x][2] = check_val(pic[y,x][2] - rand_minus_color_value)
+
+	else:
+		list_chanal = [0,1,2]
+		chanal1 = random.choice(list_chanal)
+		list_chanal.remove(chanal1)
+		chanal2 = random.choice(list_chanal)
+
+		for y in range(0, h):
+				for x in range(0, w):
+					pic[y,x][chanal1] = check_val(pic[y,x][chanal1] - rand_minus_color_value)
+					pic[y,x][chanal2] = check_val(pic[y,x][chanal2] - rand_minus_color_value2)
+
+
+	r_shapes = labelMe_class.Shapes(label, [[0, 0],[w-1, h-1]], None, "rectangle", {})
+
+	res = TreeRet(pic, [r_shapes.to_string_form()], [r_shapes.to_string_form()])
 	return res
 

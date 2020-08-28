@@ -36,7 +36,7 @@ def add_vertical_pattern(img, label):
 	segment_length = pattern_length // 8
 
 	row_count = 0
-	start_row_index = 0
+# 	start_row_index = 0
 	horizontal_shift = random.randint(0, pattern_dist)
 
 	min_x = width
@@ -103,7 +103,7 @@ def add_vertical_pattern(img, label):
 def blurring(img, label):
 	blur = cv2.bilateralFilter(img, 40, 100, 100)
 
-	shapes = labelMe_class.Shapes(label, [[0, 0],[blur.shape[1], blur.shape[0]]], None, "rectangle", {})
+	shapes = labelMe_class.Shapes(label, [[0, 0],[blur.shape[1]-1, blur.shape[0]-1]], None, "rectangle", {})
 	res = TreeRet(blur, [shapes.to_string_form()], [shapes.to_string_form()])
 	return res
 
@@ -330,6 +330,8 @@ def point_two_line(x1_1,y1_1, x1_2,y1_2, x2_1,y2_1, x2_2,y2_2):
 	else:
 		return None
 
+
+#сделать ограничение именно на контур, а не на выпуклую фигуру (разбивка точек на внутр., наружн и границы (границы проверять на пересечения с другими сторонами))
 def contntur_limitation(in_point_list, min_limit_x, min_limit_y, max_limit_x, max_limit_y):
 	contur = []
 
@@ -1187,9 +1189,9 @@ if __name__ == '__main__':
 
 			if options.glitch_type == 'radial_dotted_line':
 				if is_bound_specified:
-					new_list = og.dotted_lines_radial(img, "1", arg1, arg2)
+					new_list = og.dotted_lines_radial(img, "8", arg1, arg2)
 				else:
-					new_list = og.dotted_lines_radial(img, "1")
+					new_list = og.dotted_lines_radial(img, "8")
 
 				output_name = str(count) + "_" + str(time.time()) + "_radial_dotted_line"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
@@ -1206,9 +1208,9 @@ if __name__ == '__main__':
 
 			if options.glitch_type == 'parallel_line':
 				if is_bound_specified:
-					new_list = og.parallel_lines(img, "1", arg1, arg2)
+					new_list = og.parallel_lines(img, "8", arg1, arg2)
 				else:
-					new_list = og.parallel_lines(img, "1")
+					new_list = og.parallel_lines(img, "8")
 
 				output_name = str(count) + "_" + str(time.time()) + "_parallel_line"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
@@ -1245,7 +1247,7 @@ if __name__ == '__main__':
 
 
 			if options.glitch_type == 'texture_popin':
-				new_list = blurring(img, "1")
+				new_list = blurring(img, "9")
 
 				output_name = str(count) + "_" + str(time.time()) + "_texture_popin"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
@@ -1354,6 +1356,25 @@ if __name__ == '__main__':
 					new_list = addition_glitch.black_tree(img, "1", bool_flag)
 
 				output_name = str(count) + "_" + str(time.time()) + "_black_tree"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+				if not is_video:
+					count += 1
+
+			if options.glitch_type == 'color_cast':
+				if is_bound_specified:
+					new_list = addition_glitch.color_cast(img, "2", bool_flag, arg1, arg2)
+				else:
+					new_list = addition_glitch.color_cast(img, "2", bool_flag)
+
+				output_name = str(count) + "_" + str(time.time()) + "_color_cast"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
 				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
