@@ -6,7 +6,7 @@ import math
 from PIL import Image
 
 from common_file import labelMe_class
-from common_file.tree_return_class import TreeRet
+from common_file.return_class import TreeRet
 
 def vrglow(image,pixel,color,radius):
 	transparent=np.zeros((image.shape[0],image.shape[1],4),dtype=np.uint8)

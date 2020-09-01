@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from common_file import labelMe_class
-from common_file.tree_return_class import TreeRet
+from common_file.return_class import TreeRet
 
 def check_val(value):
 	if value > 255:

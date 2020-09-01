@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import random
 
-from common_file.tree_return_class import TreeRet
+from common_file.return_class import TreeRet
 from common_file import labelMe_class
 
 import json

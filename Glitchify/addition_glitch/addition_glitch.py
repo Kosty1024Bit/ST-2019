@@ -9,7 +9,7 @@ import numpy.random as random
 import numpy as np
 
 from common_file import labelMe_class
-from common_file.tree_return_class import TreeRet
+from common_file.return_class import RetClass
 
 
 def intersection_check(list_coordinate, point1, point2):
@@ -28,6 +28,21 @@ def get_random_color():
 	return b_int, g_int, r_int
 
 
+def np_array_to_list_int_points(arr):
+	list_points = []
+	for (x,y) in arr:
+		list_points.append([int(x),int(y)])
+	return list_points
+
+def contur_to_list_int_points(contur):
+	list_points = []
+	for point in contur:
+		(x,y) = point[0]
+		list_points.append([int(x),int(y)])
+	return list_points
+
+
+
 def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 	height = picture.shape[0]
 	width = picture.shape[1]
@@ -35,11 +50,7 @@ def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 
 	overlay = picture.copy()
 	pic = picture.copy()
-	f_json_list = []
-	max_x = 0
-	max_y = 0
-	min_x = width
-	min_y = height
+	p_json_list = []
 
 	list_coordinate_rectangle = []
 	count_fail = 0
@@ -92,12 +103,6 @@ def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 
 		list_coordinate_rectangle.append([[first_x,first_y], [last_x, last_y]])
 
-		min_x = min(min_x, first_x, last_x)
-		max_x = max(max_x, first_x, last_x)
-
-		min_y = min(min_y, first_y, last_y)
-		max_y = max(max_y, first_y, last_y)
-
 		orientation = random.randint(0,2)
 
 		if orientation == 0:
@@ -114,18 +119,17 @@ def white_square(picture, label, allow_intersections, lo = 2, hi = 15):
 		pts = np.array(((x_top, last_y), (last_x, y_right), (x_down, first_y), (first_x,y_left)), dtype=int)
 		cv2.fillConvexPoly(overlay, pts, color)
 
-		f_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, last_y]], None, "rectangle", {})
-
-		f_json_list.append(f_shapes.to_string_form())
+		p_shapes = labelMe_class.Shapes(label, np_array_to_list_int_points(pts), None, "polygon", {})
+		p_json_list.append(p_shapes)
 
 	if not count_fail == 0:
 		 print (count_fail)
 
 	alpha = 1
 	cv2.addWeighted(overlay, alpha, pic, 1 - alpha, 0, pic)
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
 
-	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])
+
+	res = RetClass(pic, p_json_list)
 	return res
 
 def create_tree(point_1, point_2):
@@ -144,7 +148,7 @@ def create_tree(point_1, point_2):
 		if (w_05 > 20):
 			ps1_x = random.randint(to_int(3/4*w_05), w_05-4)
 		else:
-			ps1_x = random.randint(5 + to_int(3/4*w_05), w_05+6)
+			ps1_x = random.randint(to_int(1/2*w_05), w_05-2)
 
 		ps2_y = random.randint(3 + to_int(0.05 * h), to_int(0.1 * h)+4)
 
@@ -202,11 +206,7 @@ def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 
 	overlay = picture.copy()
 	pic = picture.copy()
-	f_json_list = []
-	max_x = 0
-	max_y = 0
-	min_x = width
-	min_y = height
+	p_json_list = []
 
 	list_coordinate_rectangle = []
 
@@ -258,27 +258,20 @@ def black_tree(picture, label, allow_intersections, lo = 2, hi = 15):
 
 		list_coordinate_rectangle.append([[first_x,first_y], [last_x, last_y]])
 
-		min_x = min(min_x, first_x, last_x)
-		max_x = max(max_x, first_x, last_x)
-
-		min_y = min(min_y, first_y, last_y)
-		max_y = max(max_y, first_y, last_y)
-
 		contur = create_tree([first_x, first_y], [last_x, last_y])
 
 		cv2.fillConvexPoly(overlay, contur, color)
 
-		f_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, last_y]], None, "rectangle", {})
+		p_shapes = labelMe_class.Shapes(label, np_array_to_list_int_points(contur), None, "polygon", {})
 
-		f_json_list.append(f_shapes.to_string_form())
+		p_json_list.append(p_shapes)
 
 	if not count_fail == 0:
 		 print (count_fail)
 	alpha = 1
 	cv2.addWeighted(overlay, alpha, pic, 1 - alpha, 0, pic)
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
 
-	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])
+	res = RetClass(pic, p_json_list)
 	return res
 
 
@@ -293,13 +286,8 @@ def add_random_patches_mods(img, label, lo = 3, hi = 10):
 	contours.sort(key = len)
 	patch_number = np.random.randint(lo, hi+1)
 	print (patch_number)
-	min_x = imgray.shape[1]
-	max_x = 0
 
-	min_y = imgray.shape[0]
-	max_y = 0
-
-	f_json_list = []
+	p_json_list = []
 
 	offset = 1
 
@@ -351,33 +339,10 @@ def add_random_patches_mods(img, label, lo = 3, hi = 10):
 
 		contour = contours[len(contours) - 1 - i - offset]
 
-		(x,y) = contour[0,0]
-		min_x_c = x
-		max_x_c = x
+		p_shapes = labelMe_class.Shapes(label, contur_to_list_int_points(contour), None, "polygon", {})
+		p_json_list.append(p_shapes)
 
-		min_y_c = y
-		max_y_c = y
-		for point in contour:
-			(x_c, y_c) = point[0]
-
-			min_x_c = int(min(min_x_c, x_c))
-			max_x_c = int(max(max_x_c, x_c))
-
-			min_y_c = int(min(min_y_c, y_c))
-			max_y_c = int(max(max_y_c, y_c))
-
-		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
-
-		min_x = min(min_x, min_x_c)
-		max_x = max(max_x, max_x_c)
-
-		min_y = min(min_y, min_y_c)
-		max_y = max(max_y, max_y_c)
-
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
-	res = TreeRet(img, f_json_list, [r_shapes.to_string_form()])
-
+	res = RetClass(img, p_json_list)
 	return res
 
 def check_val(value):
@@ -423,8 +388,8 @@ def color_cast(picture, label, allow_intersections, lo = 64, hi = 127):
 					pic[y,x][chanal2] = check_val(pic[y,x][chanal2] - rand_minus_color_value2)
 
 
-	r_shapes = labelMe_class.Shapes(label, [[0, 0],[w-1, h-1]], None, "rectangle", {})
+	p_shapes = labelMe_class.Shapes(label, [[0, 0],[w-1, 0],[w-1, h-1],[0, h-1]], None, "polygon", {})
 
-	res = TreeRet(pic, [r_shapes.to_string_form()], [r_shapes.to_string_form()])
+	res = RetClass(pic, [p_shapes])
 	return res
 

@@ -18,7 +18,10 @@ from addition_glitch import addition_glitch
 import json
 from itertools import tee
 from common_file import labelMe_class
-from common_file.tree_return_class import TreeRet
+
+from common_file.return_class import RetClass
+
+from common_file.return_class import TreeRet
 import math
 import time
 
@@ -27,6 +30,14 @@ def get_random_color():
 	g_int = npr.randint(0,256)
 	r_int = npr.randint(0,256)
 	return b_int, g_int, r_int
+
+
+def contur_to_list_int_points(contur):
+	list_points = []
+	for point in contur:
+		(x,y) = point[0]
+		list_points.append([int(x),int(y)])
+	return list_points
 
 def add_vertical_pattern(img, label):
 	color = np.random.randint(0,256,size = 3)
@@ -248,13 +259,7 @@ def add_random_patches(im, label, lo = 3, hi = 20):
 	patch_number = np.random.randint(lo,hi+1)
 	b_int, g_int, r_int = get_random_color()
 
-	min_x = imgray.shape[1]
-	max_x = 0
-
-	min_y = imgray.shape[0]
-	max_y = 0
-
-	f_json_list = []
+	p_json_list = []
 
 	for i in range(patch_number):
 		if color == 0:
@@ -268,33 +273,10 @@ def add_random_patches(im, label, lo = 3, hi = 20):
 
 		contour = contours[len(contours) - 1 - i]
 
-		(x,y) = contour[0,0]
-		min_x_c = x
-		max_x_c = x
+		p_shapes = labelMe_class.Shapes(label, contur_to_list_int_points(contour), None, "polygon", {})
+		p_json_list.append(p_shapes)
 
-		min_y_c = y
-		max_y_c = y
-		for point in contour:
-			(x_c, y_c) = point[0]
-
-			min_x_c = int(min(min_x_c, x_c))
-			max_x_c = int(max(max_x_c, x_c))
-
-			min_y_c = int(min(min_y_c, y_c))
-			max_y_c = int(max(max_y_c, y_c))
-
-		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
-
-		min_x = min(min_x, min_x_c)
-		max_x = max(max_x, max_x_c)
-
-		min_y = min(min_y, min_y_c)
-		max_y = max(max_y, max_y_c)
-
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
-	res = TreeRet(im, f_json_list, [r_shapes.to_string_form()])
-
+	res = RetClass(im, p_json_list)
 	return res
 
 
@@ -725,6 +707,87 @@ def write_region_json_files(r_json, is_r_json, original_name_file, filename, img
 
 
 
+
+
+
+def new_write_poligon_json_files(p_json, original_name_file, filename, img_shape):
+	string_p_json = []
+	for el_p_json in p_json:
+		string_p_json.append(el_p_json.to_string_form())
+
+	#write json with adres filename
+	write_p_json = labelMe_class.Json("0.0.0 version", {}, string_p_json, original_name_file, None, img_shape[0], img_shape[1])
+	with open(filename + "_poligon.json", "w") as write_file:
+		json.dump(write_p_json.to_string_form(), write_file, indent=4)
+
+
+def poligon_to_full_json(p_json, img_shape):
+	string_f_json = []
+	for el_p_json in p_json:
+		min_x = img_shape[1] - 1
+		min_y = img_shape[0] - 1
+		max_x = 0
+		max_y = 0
+
+		for (x,y) in el_p_json.points:
+			min_x = min(min_x, x)
+			min_y = min(min_y, y)
+			max_x = max(max_x, x)
+			max_y = max(max_y, y)
+
+		f_shapes = labelMe_class.Shapes(el_p_json.label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
+		string_f_json.append(f_shapes.to_string_form())
+
+	return string_f_json
+
+def new_write_full_json_files(p_json, original_name_file, filename, img_shape):
+	#write json with adres filename
+	string_f_json = poligon_to_full_json(p_json, img_shape)
+	write_f_json = labelMe_class.Json("0.0.0 version", {}, string_f_json, original_name_file, None, img_shape[0], img_shape[1])
+	with open(filename + "_full.json", "w") as write_file:
+		json.dump(write_f_json.to_string_form(), write_file, indent=4)
+
+def poligon_to_region_json(p_json, img_shape):
+	min_x = img_shape[1] - 1
+	min_y = img_shape[0] - 1
+	max_x = 0
+	max_y = 0
+
+	for el_p_json in p_json:
+		for (x,y) in el_p_json.points:
+			min_x = min(min_x, x)
+			min_y = min(min_y, y)
+			max_x = max(max_x, x)
+			max_y = max(max_y, y)
+
+	r_shapes = labelMe_class.Shapes(el_p_json.label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
+
+	return [r_shapes.to_string_form()]
+
+
+def new_write_region_json_files(p_json, original_name_file, filename, img_shape):
+	#write json with adres filename
+	string_r_json = poligon_to_region_json(p_json, img_shape)
+	write_r_json = labelMe_class.Json("0.0.0 version", {}, string_r_json, original_name_file, None, img_shape[0], img_shape[1])
+	with open(filename + "_region.json", "w") as write_file:
+		json.dump(write_r_json.to_string_form(), write_file, indent=4)
+
+def new_all_writer(ret_class, outname, is_poligon_json, poligon_outname, is_full_json, full_outname, is_region_json, region_outname):
+
+	output_filename = os.path.join(options.output_foldername, outname + ".png")
+	cv2.imwrite(output_filename, ret_class.img)
+
+	if is_poligon_json:
+		new_write_poligon_json_files(ret_class.p_json, output_filename, poligon_outname, ret_class.img.shape)
+
+	if is_full_json:
+		new_write_full_json_files(ret_class.p_json, output_filename, full_outname, ret_class.img.shape)
+
+	if is_region_json:
+		new_write_region_json_files(ret_class.p_json, output_filename, region_outname, ret_class.img.shape)
+
+
+
 def is_video_file(filename):
 	video_file_extensions = (
 	'.264', '.3g2', '.3gp', '.3gp2', '.3gpp', '.3gpp2', '.3mm', '.3p2', '.60d', '.787', '.89', '.aaf', '.aec', '.aep', '.aepx',
@@ -793,11 +856,14 @@ if __name__ == '__main__':
 #my add code
 	parser.add_argument('-fj', '--full_json', dest = 'full_json')
 	parser.add_argument('-rj', '--region_json', dest = 'region_json')
+	parser.add_argument('-pj', '--poligon_json', dest = 'poligon_json')
 
 	parser.add_argument('-ofj', '--output_full_json', dest = 'output_foldername_full_json')
 	parser.add_argument('-orj', '--output_region_json', dest = 'output_foldername_region_json')
+	parser.add_argument('-opj', '--output_poligon_json', dest = 'output_foldername_poligon_json')
 
 	parser.add_argument('-bf', '--boolean_flag', dest = 'boolean_flag')
+	parser.add_argument('-pwf', '--present_write_format', dest = 'present_write_format')
 
 
 	options = parser.parse_args()
@@ -815,6 +881,7 @@ if __name__ == '__main__':
 #add code
 	is_full_json = False
 	is_region_json = False
+	is_poligon_json = False
 
 	if options.resize_output == 'True' or options.resize_output == 'true':
 		is_output_resized = True
@@ -825,6 +892,12 @@ if __name__ == '__main__':
 		bool_flag = True
 	else:
 		bool_flag = False
+
+	if options.present_write_format == 'True' or options.present_write_format == 'true':
+		is_present_write_format = True
+	else:
+		is_present_write_format = False
+
 
 #было закоменчено, видимо не закончено
 	# if options.output_type == 'video' or options.output_type == 'Video':
@@ -869,6 +942,9 @@ if __name__ == '__main__':
 	if options.region_json is None or options.region_json == 'True' or options.region_json == 'true':
 		is_region_json = True
 
+	if options.poligon_json is None or options.poligon_json == 'True' or options.poligon_json_json == 'true':
+		is_poligon_json = True
+
 	if options.output_foldername_full_json is None:
 		options.output_foldername_full_json = options.output_foldername
 
@@ -882,6 +958,13 @@ if __name__ == '__main__':
 	if not os.path.isdir(options.output_foldername_region_json):
 		if is_region_json is True:
 			os.mkdir(options.output_foldername_region_json)
+
+	if options.output_foldername_poligon_json is None:
+		options.output_foldername_poligon_json = options.output_foldername
+
+	if not os.path.isdir(options.output_foldername_poligon_json):
+		if is_poligon_json is True:
+			os.mkdir(options.output_foldername_poligon_json)
 
 
 
@@ -1098,15 +1181,20 @@ if __name__ == '__main__':
 						new_list = add_random_patches(img, "1")
 
 				output_name = str(count) + "_" + str(time.time()) + "_random_patch"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+				if not is_present_write_format:
+					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
 
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
+												          is_full_json,     output_filename_f_json,\
+														  is_region_json,   output_filename_r_json)
 
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+				else:
+					output_filename = os.path.join(options.output_foldername, output_name + ".png")
+					write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+
 				if not is_video:
 					count += 1
 
@@ -1337,15 +1425,20 @@ if __name__ == '__main__':
 					new_list = addition_glitch.white_square(img, "1", bool_flag)
 
 				output_name = str(count) + "_" + str(time.time()) + "_white_square"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+				if not is_present_write_format:
+					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
 
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
+												          is_full_json,     output_filename_f_json,\
+														  is_region_json,   output_filename_r_json)
 
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+				else:
+					output_filename = os.path.join(options.output_foldername, output_name + ".png")
+					write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+
 				if not is_video:
 					count += 1
 
@@ -1356,15 +1449,19 @@ if __name__ == '__main__':
 					new_list = addition_glitch.black_tree(img, "1", bool_flag)
 
 				output_name = str(count) + "_" + str(time.time()) + "_black_tree"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+				if not is_present_write_format:
+					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
 
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
+												          is_full_json,     output_filename_f_json,\
+														  is_region_json,   output_filename_r_json)
+				else:
+					output_filename = os.path.join(options.output_foldername, output_name + ".png")
+					write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 				if not is_video:
 					count += 1
 
@@ -1375,15 +1472,20 @@ if __name__ == '__main__':
 					new_list = addition_glitch.color_cast(img, "2", bool_flag)
 
 				output_name = str(count) + "_" + str(time.time()) + "_color_cast"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+				if not is_present_write_format:
+					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
 
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
+												          is_full_json,     output_filename_f_json,\
+														  is_region_json,   output_filename_r_json)
+				else:
+					output_filename = os.path.join(options.output_foldername, output_name + ".png")
+					write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
 
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+
 				if not is_video:
 					count += 1
 
