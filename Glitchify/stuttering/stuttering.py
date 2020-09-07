@@ -5,7 +5,6 @@ import random
 from common_file.return_class import TreeRet
 from common_file import labelMe_class
 
-import json
 # in_name='bd-original-14.jpg'
 # out_name='stuttering_test.png'
 

@@ -17,3 +17,4 @@
 17. white_square
 18. triangle
 19. black_tree
+20. color_cast
