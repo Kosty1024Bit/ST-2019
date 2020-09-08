@@ -27,6 +27,12 @@ def contur_to_list_int_points(contur):
 		list_points.append([int(x),int(y)])
 	return list_points
 
+def np_array_to_list_int_points(arr):
+	list_points = []
+	for (x,y) in arr:
+		list_points.append([int(x),int(y)])
+	return list_points
+
 def add_vertical_pattern(img, label):
 	color = np.random.randint(0,256,size = 3)
 	(height, width, channel) = img.shape
@@ -38,13 +44,8 @@ def add_vertical_pattern(img, label):
 # 	start_row_index = 0
 	horizontal_shift = random.randint(0, pattern_dist)
 
-	min_x = width
-	max_x = 0
+	p_json_list = []
 
-	min_y = height
-	max_y = 0
-
-	f_json_list = []
 
 	for x in range(horizontal_shift, width, pattern_dist):
 		if row_count % 4 == 0:
@@ -85,25 +86,19 @@ def add_vertical_pattern(img, label):
 
 		row_count += 1
 
-		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
+		p_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [min_x_c, max_y_c],[max_x_c, max_y_c], [max_x_c, min_y_c]], None, "polygon", {})
+		p_json_list.append(p_shapes)
 
-		min_x = min(min_x, min_x_c)
-		max_x = max(max_x, max_x_c)
 
-		min_y = min(min_y, min_y_c)
-		max_y = max(max_y, max_y_c)
-
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
-	res = TreeRet(img, f_json_list, [r_shapes.to_string_form()])
+	res = RetClass(img, p_json_list)
 	return res
 
 
 def blurring(img, label):
 	blur = cv2.bilateralFilter(img, 40, 100, 100)
 
-	shapes = labelMe_class.Shapes(label, [[0, 0],[blur.shape[1]-1, blur.shape[0]-1]], None, "rectangle", {})
-	res = TreeRet(blur, [shapes.to_string_form()], [shapes.to_string_form()])
+	shapes = labelMe_class.Shapes(label, [[0, 0],[0, blur.shape[0]-1],[blur.shape[1]-1, blur.shape[0]-1],[blur.shape[1]-1, 0]], None, "polygon", {})
+	res = RetClass(blur, [shapes])
 	return res
 
 
@@ -154,22 +149,14 @@ def create_discoloration(image, label):
 					min_y = min(min_y, y)
 					max_y = max(max_y, y)
 	else:
-		b_int = npr.randint(new_intesity,256)
-		g_int = npr.randint(new_intesity,256)
-		r_int = npr.randint(new_intesity,256)
+		b_int, g_int, r_int = random.randint(new_intesity, 256, size = 3)
 		for y in range(0, img.shape[0]):
 			for x in range(0, img.shape[1]):
 				if img[y,x][0] > threshold:
 					img[y,x] = (b_int, g_int, r_int)
 
-					min_x = min(min_x, x)
-					max_x = max(max_x, x)
-
-					min_y = min(min_y, y)
-					max_y = max(max_y, y)
-
-	shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
-	res = TreeRet(img, [shapes.to_string_form()], [shapes.to_string_form()])
+	shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, min_y],[max_x, max_y],[min_x, max_y]], None, "polygon", {})
+	res = RetClass(img, [shapes])
 	return res
 
 
@@ -198,13 +185,7 @@ def triangulation(img, label):
 			triangles.append(np.array([pt5,pt2,pt3]))
 			triangles.append(np.array([pt5,pt4,pt3]))
 
-	min_x = w
-	max_x = 0
-
-	min_y = h
-	max_y = 0
-
-	f_json_list = []
+	p_json_list = []
 
 	for t in triangles:
 		mid_pt = ((t[0] + t[1] + t[2])/3).astype(int)
@@ -217,23 +198,12 @@ def triangulation(img, label):
 
 		p = cv2.drawContours(img, [t], -1, c, -1)
 
-		min_x_c = int(min(t[0,0],t[1,0],t[2,0]))
-		max_x_c = int(max(t[0,0],t[1,0],t[2,0]))
+		p_shapes = labelMe_class.Shapes(label, np_array_to_list_int_points(t), None, "polygon", {})
+		p_json_list.append(p_shapes)
 
-		min_y_c = int(min(t[0,1],t[1,1],t[2,1]))
-		max_y_c = int(max(t[0,1],t[1,1],t[2,1]))
 
-		f_shapes = labelMe_class.Shapes(label, [[min_x_c, min_y_c], [max_x_c, max_y_c]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
 
-		min_x = min(min_x, min_x_c)
-		max_x = max(max_x, max_x_c)
-
-		min_y = min(min_y, min_y_c)
-		max_y = max(max_y, max_y_c)
-
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
-	res = TreeRet(p, f_json_list, [r_shapes.to_string_form()])
+	res = RetClass(p, p_json_list)
 	return res
 
 
@@ -448,20 +418,21 @@ def add_triangles(im, label, lo = 1, hi = 3):
 	b_int, g_int, r_int = get_random_color()
 	cv2.fillConvexPoly(overlay, pts, color= tuple([b_int, g_int, r_int]) )
 
-	f_json_list = []
-	max_x = max(x_0,x_1,x_2)
-	max_y = max(y_0,y_1,y_2)
-	min_x = min(x_0,x_1,x_2)
-	min_y =	min(y_0,y_1,y_2)
+	p_json_list = []
 
-	f_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x,max_y]], None, "rectangle", {})
-	f_json_list.append(f_shapes.to_string_form())
+	p_shapes = labelMe_class.Shapes(label,  np_array_to_list_int_points(pts), None, "polygon", {})
+	p_json_list = [p_shapes]
 
 	num_shapes = np.random.randint(lo, hi + 1)
 	alpha = .95
 	for i in range(num_shapes):
 		x_1, y_1 = np.mean([x_1, x_0]) + np.random.randint(-60,60), np.mean([y_1,y_0])+ np.random.randint(-60,60)
 		x_2, y_2 = np.mean([x_2, x_0]) + np.random.randint(-60,60), np.mean([y_2,y_0])+ np.random.randint(-60,60)
+
+		x_1 = min(max(x_1, 0), w-1)
+		x_2 = min(max(x_2, 0), w-1)
+		y_1 = min(max(y_1, 0), h-1)
+		y_1 = min(max(y_2, 0), h-1)
 
 		pts = np.array(((x_0, y_0), (x_1, y_1), (x_2, y_2)), dtype=int)
 		# if not is_random:
@@ -470,28 +441,12 @@ def add_triangles(im, label, lo = 1, hi = 3):
 		b_int, g_int, r_int = get_random_color()
 		cv2.fillConvexPoly(overlay, pts, color= tuple([b_int, g_int, r_int]) )
 
-		temp_min_x = min(x_0,x_1,x_2)
-		temp_min_y = min(y_0,y_1,y_2)
-
-		temp_max_x = max(x_0,x_1,x_2)
-		temp_max_y = max(y_0,y_1,y_2)
-
-		f_shapes = labelMe_class.Shapes(label, [[temp_min_x, temp_min_y], [temp_max_x, temp_max_y]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
-
-		min_x = min(min_x, temp_min_x)
-		max_x = max(max_x, temp_max_x)
-
-		min_y = min(min_y, temp_min_y)
-		max_y = max(max_y, temp_max_y)
-
+		p_shapes = labelMe_class.Shapes(label, np_array_to_list_int_points(pts), None, "polygon", {})
+		p_json_list.append(p_shapes)
 
 	cv2.addWeighted(overlay, alpha, output, 1 - alpha, 0, output)
 
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
-	r_json_list = [r_shapes.to_string_form()]
-
-	res = TreeRet(output, f_json_list, r_json_list)
+	res = RetClass(output, p_json_list)
 	return res
 
 

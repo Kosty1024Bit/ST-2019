@@ -7,11 +7,9 @@
 
 добавлен новый тег - poligon
 
-переделка под него:
-white_square
-black_tree
-random_patch
-color_cast
+
+
+
 
 
 

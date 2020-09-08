@@ -461,3 +461,54 @@ def color_cast(picture, label, allow_intersections, lo = 64, hi = 127):
 	res = RetClass(pic, [p_shapes])
 	return res
 
+
+def create_discoloration_new(image, label):
+	img = image.copy()
+	threshold = random.randint(100, 140)
+	new_intesity = random.randint(200, 256)
+
+	imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+	ret, im_gray_mask = cv2.threshold(imgray, 255, 255, 0)
+
+
+	color = random.randint(0, 6)
+	if color == 0:
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][2] > threshold:
+					img[y,x] = (0, 0, new_intesity)
+					im_gray_mask[y,x] = 255
+
+	elif color == 1:
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][1] > threshold:
+					img[y,x] = (0, new_intesity, 0)
+					im_gray_mask[y,x] = 255
+
+	elif color == 2:
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][0] > threshold:
+					img[y,x] = (new_intesity, 0, 0)
+					im_gray_mask[y,x] = 255
+
+	else:
+		b_int, g_int, r_int = random.randint(200, 256, size = 3)
+
+		for y in range(0, img.shape[0]):
+			for x in range(0, img.shape[1]):
+				if img[y,x][0] > threshold:
+					img[y,x] = (b_int, g_int, r_int)
+					im_gray_mask[y,x] = 255
+
+	contours, hierarchy = cv2.findContours(im_gray_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+	p_list = []
+
+	for contour in contours:
+		p_list.append(labelMe_class.Shapes(label, contur_to_list_int_points(contour), None, "polygon", {}))
+
+	res = RetClass(img, p_list)
+	return res
+

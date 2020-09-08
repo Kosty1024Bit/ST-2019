@@ -428,7 +428,6 @@ if __name__ == '__main__':
 ############################################# NONE ########################################################
 #имя входной картинки и её типа - video_path
 
-
 			if options.glitch_type == 'screen_tearing':
 				if is_image:
 					print("Single input image is skipped when producing screen tearing glitches")
@@ -482,6 +481,13 @@ if __name__ == '__main__':
 				if not is_video:
 					count += 1
 
+
+			#для универсального типа вывода
+			new_list = None
+			output_name = None
+
+############################################################################################
+
 			if options.glitch_type == "desktop_glitch_one":
 				# print(img.shape)
 				new_list = create_desktop_glitch_one(img, "1")
@@ -499,6 +505,11 @@ if __name__ == '__main__':
 				if not is_video:
 					count += 1
 
+				new_list = None
+				output_name = None
+
+############################################################################################
+
 			if options.glitch_type == "desktop_glitch_two":
 				new_list = create_desktop_glitch_two(img, "1")
 
@@ -515,23 +526,21 @@ if __name__ == '__main__':
 				if not is_video:
 					count += 1
 
+				new_list = None
+				output_name = None
+
+############################################################################################
+
 			if options.glitch_type == "discoloration":
 				# print(img.shape)
-				new_list = glitchify_modules.create_discoloration(img, "1")
+				if not bool_flag:
+					new_list = addition_glitch.create_discoloration_new(img, "1")
+				else:
+					new_list = glitchify_modules.create_discoloration(img, "1")
 
 				output_name = str(count) + "_" + str(time.time()) + "_discoloration"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				# cv2.imwrite(output_filename, img)
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == "random_patch":
 				if not bool_flag:
@@ -547,21 +556,7 @@ if __name__ == '__main__':
 
 				output_name = str(count) + "_" + str(time.time()) + "_random_patch"
 
-				if not is_present_write_format:
-					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
-
-					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
-												          is_full_json,     output_filename_f_json,\
-														  is_region_json,   output_filename_r_json)
-
-				else:
-					output_filename = os.path.join(options.output_foldername, output_name + ".png")
-					write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'shape':
 				if is_bound_specified:
@@ -582,6 +577,11 @@ if __name__ == '__main__':
 				if not is_video:
 					count += 1
 
+				new_list = None
+				output_name = None
+
+############################################################################################
+
 			if options.glitch_type == 'triangle':
 				if is_bound_specified:
 					new_list = glitchify_modules.add_triangles(img, "1", arg1, arg2)
@@ -589,18 +589,8 @@ if __name__ == '__main__':
 					new_list = glitchify_modules.add_triangles(img, "1")
 
 				output_name = str(count) + "_" + str(time.time()) + "_triangle"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
-
+############################################################################################
 
 			if options.glitch_type == 'shader':
 				if is_bound_specified:
@@ -621,6 +611,11 @@ if __name__ == '__main__':
 				if not is_video:
 					count += 1
 
+				new_list = None
+				output_name = None
+
+############################################################################################
+
 			if options.glitch_type == 'dotted_line':
 				if is_bound_specified:
 					new_list = og.dotted_lines(img, "1", arg1, arg2)
@@ -628,17 +623,8 @@ if __name__ == '__main__':
 					new_list = og.dotted_lines(img, "1")
 
 				output_name = str(count) + "_" + str(time.time()) + "_dotted_line"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'radial_dotted_line':
 				if is_bound_specified:
@@ -647,17 +633,8 @@ if __name__ == '__main__':
 					new_list = og.dotted_lines_radial(img, "8")
 
 				output_name = str(count) + "_" + str(time.time()) + "_radial_dotted_line"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'parallel_line':
 				if is_bound_specified:
@@ -666,18 +643,8 @@ if __name__ == '__main__':
 					new_list = og.parallel_lines(img, "8")
 
 				output_name = str(count) + "_" + str(time.time()) + "_parallel_line"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
-
+############################################################################################
 
 			if options.glitch_type == 'square_patch':
 				if is_bound_specified:
@@ -686,38 +653,20 @@ if __name__ == '__main__':
 					new_list = og.square_patches(img, "1")
 
 				output_name = str(count) + "_" + str(time.time()) + "_square_patch"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
-
+############################################################################################
 
 			if options.glitch_type == 'texture_popin':
 				new_list = glitchify_modules.blurring(img, "9")
 
 				output_name = str(count) + "_" + str(time.time()) + "_texture_popin"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'random_triangulation':
 				print("Random Triangulation is removed from the list of glitches")
 
+############################################################################################
 
 			if options.glitch_type == 'regular_triangulation':
 				new_list = glitchify_modules.triangulation(img, "1")
@@ -725,31 +674,14 @@ if __name__ == '__main__':
 				output_name = str(count) + "_" + str(time.time()) + "_regular_triangulation"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'morse_code':
 				new_list = glitchify_modules.add_vertical_pattern(img, "1")
 
 				output_name = str(count) + "_" + str(time.time()) + "_morse_code"
-				output_filename = os.path.join(options.output_foldername, output_name + ".png")
 
-				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-
-				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
-				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
-
-				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'stuttering':
 				new_list = produce_stuttering(img, "1")
@@ -767,6 +699,12 @@ if __name__ == '__main__':
 				if not is_video:
 					count += 1
 
+				new_list = None
+				output_name = None
+
+
+############################################################################################
+
 			if options.glitch_type == 'line_pixelation':
 				new_list = line_pixelation(img, "1")
 
@@ -783,6 +721,12 @@ if __name__ == '__main__':
 				if not is_video:
 					count += 1
 
+				new_list = None
+				output_name = None
+
+
+############################################################################################
+
 			if options.glitch_type == 'white_square':
 				if is_bound_specified:
 					new_list = addition_glitch.white_square(img, "1", bool_flag, arg3, arg1, arg2)
@@ -791,21 +735,7 @@ if __name__ == '__main__':
 
 				output_name = str(count) + "_" + str(time.time()) + "_white_square"
 
-				if not is_present_write_format:
-					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
-
-					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
-												          is_full_json,     output_filename_f_json,\
-														  is_region_json,   output_filename_r_json)
-
-				else:
-					output_filename = os.path.join(options.output_foldername, output_name + ".png")
-					write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'black_tree':
 				if is_bound_specified:
@@ -815,20 +745,7 @@ if __name__ == '__main__':
 
 				output_name = str(count) + "_" + str(time.time()) + "_black_tree"
 
-				if not is_present_write_format:
-					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
-					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
-					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
-
-					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
-												          is_full_json,     output_filename_f_json,\
-														  is_region_json,   output_filename_r_json)
-				else:
-					output_filename = os.path.join(options.output_foldername, output_name + ".png")
-					write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
-
-				if not is_video:
-					count += 1
+############################################################################################
 
 			if options.glitch_type == 'color_cast':
 				if is_bound_specified:
@@ -838,13 +755,18 @@ if __name__ == '__main__':
 
 				output_name = str(count) + "_" + str(time.time()) + "_color_cast"
 
+############################################################################################
+############################################################################################
+############################################################################################
+
+			if new_list is not None and output_name is not None:
 				if not is_present_write_format:
 					output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
 					output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
 					output_filename_p_json = os.path.join(options.output_foldername_poligon_json, output_name)
 
 					new_all_writer(new_list, output_name, is_poligon_json, 	output_filename_p_json,\
-												          is_full_json,     output_filename_f_json,\
+													      is_full_json,     output_filename_f_json,\
 														  is_region_json,   output_filename_r_json)
 				else:
 					output_filename = os.path.join(options.output_foldername, output_name + ".png")

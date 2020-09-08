@@ -6,11 +6,10 @@
 
 import cv2
 import numpy.random as random
-import matplotlib.pyplot as plt
 import numpy as np
 
 from common_file import labelMe_class
-from common_file.return_class import TreeRet
+from common_file.return_class import RetClass
 
 def check_val(value):
 	if value > 255:
@@ -33,12 +32,7 @@ def dotted_lines(picture, label, lo = 15, hi = 35):
 	g = random.randint(0,256)
 	b = random.randint(0,256)
 
-	f_json_list = []
-	max_x = 0
-	max_y = 0
-	min_x = width
-	min_y = height
-
+	p_json_list = []
 
 	for i in np.arange(number_of_lines):
 		x = ox + random.randint(-int(0.2*width), int(0.2*width))
@@ -49,11 +43,7 @@ def dotted_lines(picture, label, lo = 15, hi = 35):
 		hstep = random.choice([-4,4,-5, 5,-3,3,-6,6])
 		vstep = hstep*tangent
 
-		max_x_line = x
-		min_x_line = x
-
-		max_y_line = y
-		min_y_line = y
+		end_px, end_py = x, y
 
 		for j in np.arange(random.randint(20,50)):
 			px = int(x + j*hstep)
@@ -65,45 +55,23 @@ def dotted_lines(picture, label, lo = 15, hi = 35):
 					nx = max(px-1, 0)
 					pic[py,nx] = [r,g,b]
 
-					min_x_line = min(min_x_line, nx)
-					max_x_line = max(max_x_line, nx)
-
-					min_y_line = min(min_y_line, py)
-					max_y_line = max(max_y_line, py)
 				if u < 0.1:
 					ny = max(py-1, 0)
 					pic[ny,px] = [r,g,b]
 
-					min_x_line = min(min_x_line, px)
-					max_x_line = max(max_x_line, px)
-
-					min_y_line = min(min_y_line, ny)
-					max_y_line = max(max_y_line, ny)
-
 				pic[py,px] = [r,g,b]
-				min_x_line = min(min_x_line, px)
-				max_x_line = max(max_x_line, px)
+				end_px,end_py = px,py
 
-				min_y_line = min(min_y_line, py)
-				max_y_line = max(max_y_line, py)
 			else:
 				break
 
-		f_shapes = labelMe_class.Shapes(label, [[min_x_line, min_y_line], [max_x_line, max_y_line]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
+		p_shapes = labelMe_class.Shapes(label, [[x, y], [ max(x-1, 0),  max(y-1, 0)], [max(end_px-1, 0),  max(end_py-1, 0)], [end_px, end_py]], None, "polygon", {})
+		p_json_list.append(p_shapes)
 
-		min_x = min(min_x_line, min_x)
-		max_x = max(max_x_line, max_x)
-
-		min_y = min(min_y_line, min_y)
-		max_y = max(max_y_line, max_y)
-
-
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
-	r_json_list = [r_shapes.to_string_form()]
-
-	res = TreeRet(pic, f_json_list, r_json_list)
+	res = RetClass(pic, p_json_list)
 	return res
+
+
 
 
 def dotted_lines_radial(picture, label, lo = 30, hi = 60):
@@ -123,18 +91,11 @@ def dotted_lines_radial(picture, label, lo = 30, hi = 60):
 	angle_step = np.floor(360 / number_of_lines)
 	initial_angle = random.randint(-10,10)
 
-	f_json_list = []
-	max_x = 0
-	max_y = 0
-	min_x = width
-	min_y = height
+	p_json_list = []
+
+	end_px, end_py = x, y
 
 	for i in np.arange(number_of_lines):
-		max_x_line = x
-		min_x_line = x
-
-		max_y_line = y
-		min_y_line = y
 
 		theta = initial_angle + angle_step * i + random.randint(-5,5)
 		radian = theta/180*np.pi
@@ -152,45 +113,20 @@ def dotted_lines_radial(picture, label, lo = 30, hi = 60):
 					nx = max(px-1, 0)
 					pic[py,nx] = [r,g,b]
 
-					min_x_line = min(min_x_line, nx)
-					max_x_line = max(max_x_line, nx)
-
-					min_y_line = min(min_y_line, py)
-					max_y_line = max(max_y_line, py)
-
 				if u < 0.1:
 					ny = max(py-1, 0)
 					pic[ny,px] = [r,g,b]
 
-					min_x_line = min(min_x_line, px)
-					max_x_line = max(max_x_line, px)
-
-					min_y_line = min(min_y_line, ny)
-					max_y_line = max(max_y_line, ny)
-
 				pic[py,px] = [r,g,b]
+				end_px,end_py = px,py
 
-				min_x_line = min(min_x_line, px)
-				max_x_line = max(max_x_line, px)
-
-				min_y_line = min(min_y_line, py)
-				max_y_line = max(max_y_line, py)
 			else:
 				break
 
-		f_shapes = labelMe_class.Shapes(label, [[min_x_line, min_y_line], [max_x_line, max_y_line]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
+		p_shapes = labelMe_class.Shapes(label, [[x, y], [ max(x-1, 0),  max(y-1, 0)], [max(end_px-1, 0),  max(end_py-1, 0)], [end_px, end_py]], None, "polygon", {})
+		p_json_list.append(p_shapes)
 
-		min_x = min(min_x_line, min_x)
-		max_x = max(max_x_line, max_x)
-
-		min_y = min(min_y_line, min_y)
-		max_y = max(max_y_line, max_y)
-
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y], [max_x, max_y]], None, "rectangle", {})
-	r_json_list = [r_shapes.to_string_form()]
-
-	res = TreeRet(pic, f_json_list, r_json_list)
+	res = RetClass(pic, p_json_list)
 	return res
 
 def square_patches(picture, label, lo = 2, hi = 15):
@@ -199,11 +135,7 @@ def square_patches(picture, label, lo = 2, hi = 15):
 	width = pic.shape[1]
 	number_of_patches = random.randint(lo,hi+1)
 
-	f_json_list = []
-	max_x = 0
-	max_y = 0
-	min_x = width
-	min_y = height
+	p_json_list = []
 
 	first_y = -1
 	first_x = -1
@@ -227,15 +159,8 @@ def square_patches(picture, label, lo = 2, hi = 15):
 
 			pic[first_y:(last_y), first_x:(last_x)] = color
 
-			f_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, last_y]], None, "rectangle", {})
-			f_json_list.append(f_shapes.to_string_form())
-
-			min_x = min(min_x, first_x, last_x)
-			max_x = max(max_x, first_x, last_x)
-
-			min_y = min(min_y, first_y, last_y)
-			max_y = max(max_y, first_y, last_y)
-
+			p_shapes = labelMe_class.Shapes(label, [[first_x, first_y], [last_x, first_y], [last_x, last_y] ,[first_x, last_y]], None, "polygon", {})
+			p_json_list.append(p_shapes)
 
 		else:
 			y = first_y +  random.randint(-int(height*0.1), int(height*0.1))
@@ -246,18 +171,10 @@ def square_patches(picture, label, lo = 2, hi = 15):
 
 			pic[y:(last_y), x:(last_x)] = color
 
-			f_shapes = labelMe_class.Shapes(label, [[x, y], [last_x, last_y]], None, "rectangle", {})
-			f_json_list.append(f_shapes.to_string_form())
+			p_shapes = labelMe_class.Shapes(label, [[x, y], [last_x, y], [last_x, last_y] ,[x, last_y]], None, "polygon", {})
+			p_json_list.append(p_shapes)
 
-			min_x = min(min_x, x, last_x)
-			max_x = max(max_x, x, last_x)
-
-			min_y = min(min_y, y, last_y)
-			max_y = max(max_y, y, last_y)
-
-
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
-	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])
+	res = RetClass(pic, p_json_list)
 
 	return res
 
@@ -272,11 +189,7 @@ def parallel_lines(picture, label, lo = 60, hi = 100):
 	u = np.random.uniform(0,1)
 	sign = random.choice([1,-1])
 
-	f_json_list = []
-	max_x = 0
-	max_y = 0
-	min_x = width
-	min_y = height
+	p_json_list = []
 
 	while number_of_lines > 0:
 		x1 = random.randint(int(0.3*width),int(0.6*width))
@@ -297,25 +210,40 @@ def parallel_lines(picture, label, lo = 60, hi = 100):
 		colors = pic[y1,x1].astype(float)
 		cv2.line(pic, (x1,y1), (x2,y2), colors, lineThickness)
 
-		#print(type(x1), " ",type(x2), " ",type(y1), " ",type(y2))
-		#без перевода в число (int,float) не переводит в json так как типы переменных 'int' и  'numpy.int32'
-		#y2 имеет тип numpy.int32, для фикса сделан принудительный перевод в int
+		if x1 > x2:
+			tx = x1
+			x1 = x2
+			x2 = tx
 
-		f_shapes = labelMe_class.Shapes(label, [[x1, y1], [x2, y2]], None, "rectangle", {})
-		f_json_list.append(f_shapes.to_string_form())
+			ty = y1
+			y1 = y2
+			y2 = ty
 
-		min_x = min(min_x, x1, x2)
-		max_x = max(max_x, x1, x2)
 
-		min_y = min(min_y, y1, y2)
-		max_y = max(max_y, y1, y2)
+		point_l_x = max(x1 - lineThickness//2, 0)
+		point_r_x = min(x2 + lineThickness//2, width-1)
+
+		point_l_1_y = max(y1 - lineThickness//2, 0)
+		point_l_2_y = min(y1 + lineThickness//2, height-1)
+
+		point_r_1_y = max(y2 - lineThickness//2, 0)
+		point_r_2_y = min(y2 + lineThickness//2, height-1)
+
+
+		point_l_1 = (point_l_x, point_l_1_y)
+		point_l_2 = (point_l_x, point_l_2_y)
+		point_r_1 = (point_r_x, point_r_1_y)
+		point_r_2 = (point_r_x, point_r_2_y)
+
+
+		p_shapes = labelMe_class.Shapes(label, [point_l_1,  point_l_2, point_r_2, point_r_1], None, "polygon", {})
+
+		p_json_list.append(p_shapes)
 
 		number_of_lines -= 1
 
-	r_shapes = labelMe_class.Shapes(label, [[min_x, min_y],[max_x, max_y]], None, "rectangle", {})
-	res = TreeRet(pic, f_json_list, [r_shapes.to_string_form()])
+	res =  RetClass(pic, p_json_list)
 
 	return res
-
 
 
