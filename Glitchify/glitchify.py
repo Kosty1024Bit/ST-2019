@@ -534,7 +534,7 @@ if __name__ == '__main__':
 ############################################################################################
 
 			if options.glitch_type == "radiation":
-				new_list = create_radiation(img, "9")
+				new_list = create_radiation(img, "8")
 
 				output_name = str(count) + "_" + str(time.time()) + "_radiation"
 				output_filename = os.path.join(options.output_foldername, output_name + ".png")
