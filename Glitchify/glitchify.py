@@ -530,6 +530,27 @@ if __name__ == '__main__':
 
 				new_list = None
 				output_name = None
+			
+############################################################################################
+
+			if options.glitch_type == "radiation":
+				new_list = create_radiation(img, "9")
+
+				output_name = str(count) + "_" + str(time.time()) + "_radiation"
+				output_filename = os.path.join(options.output_foldername, output_name + ".png")
+
+				output_filename_f_json = os.path.join(options.output_foldername_full_json, output_name)
+				output_filename_r_json = os.path.join(options.output_foldername_region_json, output_name)
+
+				write_full_json_files(new_list.f_json, is_full_json, output_filename, output_filename_f_json, new_list.img)
+				write_region_json_files(new_list.r_json, is_region_json, output_filename, output_filename_r_json, new_list.img)
+
+				write_files(original_img, new_list.img, is_margin_specified, output_filename, out, is_video, True)
+				if not is_video:
+					count += 1
+
+				new_list = None
+				output_name = None
 
 ############################################################################################
 
