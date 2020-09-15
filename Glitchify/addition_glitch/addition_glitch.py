@@ -12,6 +12,13 @@ import math
 from common_file import labelMe_class
 from common_file.return_class import RetClass
 
+def check_val(value):
+	if value > 255:
+		value = 255
+	if value < 0:
+		value = 0
+	return value
+
 
 def intersection_check(list_coordinate, point1, point2):
 	for (point_l_1, point_l_2) in list_coordinate:
@@ -43,36 +50,45 @@ def contur_to_list_int_points(contur):
 	return list_points
 
 # point to the left of the vector
-def check_in_quadrilateral_counterclockwise(point1, point2, point3, point4, check_point):
-	#(bx-ax)*(py-ay)-(by-ay)*(px-ax)
-	check_point_1_2 = (point2[0] - point1[0])*(check_point[1] - point1[1]) - (point2[1] - point1[1])*(check_point[0] - point1[0])
-	if check_point_1_2 > 0:
-		return False
+def check_point_in_counter(mask, point_check):
+	if 0 <= point_check[0] < mask.shape[1] and  0 <= point_check[1] < mask.shape[0]:
+		if mask[point_check[1],point_check[0]] == 255:
+			return True
 
-	check_point_2_3 = (point3[0] - point2[0])*(check_point[1] - point2[1]) - (point3[1] - point2[1])*(check_point[0] - point2[0])
-	if check_point_2_3 > 0:
-		return False
+	return False
 
-	check_point_3_4 = (point4[0] - point3[0])*(check_point[1] - point3[1]) - (point4[1] - point3[1])*(check_point[0] - point3[0])
-	if check_point_3_4 > 0:
-		return False
+def intensity_blur_in_contoure(img, contour, min_value, max_value):
 
-	check_point_4_1 = (point1[0] - point4[0])*(check_point[1] - point4[1]) - (point1[1] - point4[1])*(check_point[0] - point4[0])
-	if check_point_4_1 > 0:
-		return False
+	mask = np.zeros((img.shape[0],img.shape[1], 1), np.uint8)
+	cv2.drawContours(mask, [contour], 0 , 255, -1)
 
-	return True
+	x_min, y_min, w, h = cv2.boundingRect (contour)
+	x_max = x_min + w
+	y_max = y_min + h
 
-def add_spots(overlay, contur, boundaries, fill_percentage):
+	for y in range(y_min, y_max):
+		for x in range(x_min, x_max):
+			if check_point_in_counter(mask, (x,y)):
+				rand_color = random.randint(0,3)
+				rand_operation = random.randint(-1,2)
+				rand_value = random.randint(min_value, max_value+1)
+				img[y,x][rand_color] = check_val(img[y,x][rand_color] + rand_operation * rand_value)
+	return img
+
+
+def add_spots(overlay, contour, fill_percentage):
 	fill_percentage_now = 0
 
-	(point1, point2, point3, point4) = contur
+	mask = np.zeros((overlay.shape[0],overlay.shape[1], 1), np.uint8)
+	cv2.drawContours(mask, [contour], 0 , 255, -1)
 
-	area =  cv2.contourArea(contur)
+	x_min, y_min, w, h = cv2.boundingRect (contour)
+	x_max = x_min + w
+	y_max = y_min + h
 
+	area =  cv2.contourArea(contour)
 	area_now = 0
 
-	((x_min, y_min),(x_max, y_max)) = boundaries
 
 	count = 0
 	while(fill_percentage_now < fill_percentage):
@@ -84,7 +100,7 @@ def add_spots(overlay, contur, boundaries, fill_percentage):
 
 		radius = random.randint(1, 6)
 
-		cycle_point = (random.randint(x_min, x_max+1), random.randint(y_min, y_max +1))
+		cycle_point = (random.randint(x_min, x_max), random.randint(y_min, y_max))
 
 		#####################################################
 		color = (0, 255, 255)
@@ -94,7 +110,7 @@ def add_spots(overlay, contur, boundaries, fill_percentage):
 		for y in range(-radius, radius+1):
 			for x in range(-radius, radius+1):
 				if math.sqrt(y**2 + x**2) <= radius:
-					if check_in_quadrilateral_counterclockwise(point1, point2, point3, point4, (cycle_point[0]+x, cycle_point[1]+y)):
+					if check_point_in_counter(mask, (cycle_point[0]+x, cycle_point[1]+y)):
 						if not all(overlay[cycle_point[1]+y, cycle_point[0]+x] == color):
 							pic_color = overlay[cycle_point[1]+y, cycle_point[0]+x]
 							result_color = (to_int(alpha * color[0] + (1 - alpha) * pic_color[0]), to_int(alpha * color[1] + (1 - alpha) * pic_color[1]), to_int(alpha * color[2] + (1 - alpha) * pic_color[2]))
@@ -183,7 +199,10 @@ def white_square(picture, label, allow_intersections, fill_percentage, lo = 2, h
 		pts = np.array(((x_top, last_y), (last_x, y_right), (x_down, first_y), (first_x,y_left)), dtype=int)
 		cv2.fillConvexPoly(overlay, pts, color)
 
-		add_spots(overlay, pts, [[first_x,first_y], [last_x, last_y]], fill_percentage)
+##############################################################################
+		intensity_blur_in_contoure(overlay, pts, -5, 5)
+
+		add_spots(overlay, pts, fill_percentage)
 
 		p_shapes = labelMe_class.Shapes(label, np_array_to_list_int_points(pts), None, "polygon", {})
 		p_json_list.append(p_shapes)
@@ -413,12 +432,6 @@ def add_random_patches_mods(img, label, lo = 3, hi = 10):
 	res = RetClass(img, p_json_list)
 	return res
 
-def check_val(value):
-	if value > 255:
-		value = 255
-	if value < 0:
-		value = 0
-	return value
 
 def color_cast(picture, label, allow_intersections, lo = 64, hi = 127):
 	pic = picture.copy()

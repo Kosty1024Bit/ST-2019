@@ -9,6 +9,8 @@ from stuttering.stuttering import produce_stuttering
 from line_pixelation.line_pixelation import line_pixelation
 from addition_glitch import addition_glitch
 from glitchify_modules import glitchify_modules
+from addition_glitch import overlap
+from addition_glitch import mosaics
 
 import json
 from common_file import labelMe_class
@@ -755,6 +757,25 @@ if __name__ == '__main__':
 
 				output_name = str(count) + "_" + str(time.time()) + "_color_cast"
 
+############################################################################################
+
+			if options.glitch_type == 'overlap':
+				if is_bound_specified:
+					new_list = overlap.overlap(img, "4", arg1, arg2)
+				else:
+					new_list = overlap.overlap(img, "4")
+
+				output_name = str(count) + "_" + str(time.time()) + "_overlap"
+
+############################################################################################
+
+			if options.glitch_type == 'mosaics':
+				if is_bound_specified:
+					new_list = mosaics.mosaics(img, "6", arg1, arg2)
+				else:
+					new_list = mosaics.mosaics(img, "6")
+
+				output_name = str(count) + "_" + str(time.time()) + "_mosaics"
 ############################################################################################
 ############################################################################################
 ############################################################################################
