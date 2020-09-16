@@ -45,9 +45,10 @@ def change_overlap_contours(shape, contours):
 
 		find_contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 		if len(find_contours) != 0:
-				contors_out.append(contur_to_list_int_points(find_contours[0]))
+			contors_out.append(contur_to_list_int_points(find_contours[0]))
 
 	contors_out.append(contours[len(contours)-1])
+
 
 	return contors_out
 
@@ -94,6 +95,9 @@ def overlap (img, label, lo = 5, hi = 10):
 
 		size_o_x = min(max(x_o_0 + size_x, 0),w-1) - x_o_0
 		size_o_y = min(max(y_o_0 + size_y, 0),h-1) - y_o_0
+
+		if size_o_x == 0 or size_o_y == 0:
+			break
 
 		pic[y_o_0: y_o_0+size_o_y, x_o_0:x_o_0+size_o_x,:] = copy[ :size_o_y,:size_o_x,:]
 
