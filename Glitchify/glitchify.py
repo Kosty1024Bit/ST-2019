@@ -771,9 +771,9 @@ if __name__ == '__main__':
 
 			if options.glitch_type == 'mosaics':
 				if is_bound_specified:
-					new_list = mosaics.mosaics(img, "6", arg1, arg2)
+					new_list = mosaics.mosaics(img, "6", arg3, arg1, arg2)
 				else:
-					new_list = mosaics.mosaics(img, "6")
+					new_list = mosaics.mosaics(img, "6", arg3)
 
 				output_name = str(count) + "_" + str(time.time()) + "_mosaics"
 ############################################################################################

@@ -15,14 +15,13 @@ D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t line_pixelation
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t white_square  
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t black_tree
-
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t triangle
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t color_cast
 
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t overlap
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t mosaics
 
-
-D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t triangle
-
+D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t radiation
 
 
 D:\Phyton\python.exe C:\Users\Nikolay\ST-2019\Glitchify\glitchify.py -i C:\Users\Nikolay\Desktop\work\in_normal -o C:\Users\Nikolay\Desktop\work\out -t white_square -fj true -ofj C:\Users\Nikolay\Desktop\work\out -rj true -orj C:\Users\Nikolay\Desktop\work\out

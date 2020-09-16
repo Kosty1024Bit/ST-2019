@@ -27,26 +27,23 @@ def contur_to_list_int_points(contur):
 def get_random_color(minimum , maximum, probability_of_emptiness_prosent):
 	b,g,r = random.randint(minimum, maximum, size = 3)
 
-	int_value = to_int(1/probability_of_emptiness_prosent)
-	probability_of_emptiness = random.randint(0, int_value+1)
+	alpha = 0
 
-	if probability_of_emptiness == 0:
+	probability_of_emptiness = random.random()
+
+	if probability_of_emptiness >= probability_of_emptiness_prosent:
 		alpha = 1
-	else:
-		alpha = 0
-
-
 
 	return (b,g,r, alpha)
 
 def mosaics_texture(w,h,step_x, step_y, probability_of_emptiness_prosent):
 	img = np.zeros((h, w, 4), np.uint8)
 
-	for y in range(0, h, step_y):
-		for x in range(0, w, step_x):
+	for y in range(0, h+1, step_y):
+		for x in range(0, w+1, step_x):
 			color = get_random_color(0, 256, probability_of_emptiness_prosent)
-			step_block_x = min(x+step_x, w-1) - x
-			step_block_y = min(y+step_y, h-1) - y
+			step_block_x = min(x+step_x, w) - x
+			step_block_y = min(y+step_y, h) - y
 			img[y:y+step_block_y, x:x+step_block_x, :] = color
 
 	return img
@@ -56,10 +53,10 @@ def mosaics_texture_img(w,h, w_text, h_text, step_x, step_y, probability_of_empt
 
 	textur = mosaics_texture(w_text, h_text, step_x, step_y, probability_of_emptiness_prosent)
 
-	for y in range(0, h, h_text-1):
-		for x in range(0, w, w_text-1):
-			step_block_img_x = min(x + w_text, w-1) - x
-			step_block_img_y = min(y + h_text, h-1) - y
+	for y in range(0, h+1, h_text):
+		for x in range(0, w+1, w_text):
+			step_block_img_x = min(x + w_text, w) - x
+			step_block_img_y = min(y + h_text, h) - y
 			img_mosaic[y:y+step_block_img_y, x:x+step_block_img_x, :] = textur[:step_block_img_y,:step_block_img_x, :]
 
 	return img_mosaic
@@ -111,17 +108,22 @@ def get_random_contoure(img):
 
 	return pts
 
+def texture_generator(contour, fp):
+	min_x, min_y, w, h = cv2.boundingRect(contour)
+	mos_img = mosaics_texture_img(w, h, 25, 25, 5, 5, fp)
+	# по идее бы сделать правильно преобразование (хотя бы поворот)
 
 
-def mosaics (img, label, lo = 2, hi = 15):
+	return mos_img
+
+def mosaics (img, label, fp, lo = 2, hi = 15):
 	pic = np.copy(img)
 
 	p_json_list = []
 
 	pts = get_random_contoure(img)
 
-	min_x, min_y, w, h = cv2.boundingRect(pts)
-	mos = mosaics_texture_img(w, h, 25, 25, 5, 5, 0.50)
+	mos = texture_generator(pts, fp)
 
 	pic = contuer_filler(pic, pts, mos)
 
