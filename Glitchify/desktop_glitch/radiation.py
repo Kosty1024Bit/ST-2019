@@ -81,10 +81,10 @@ def find_contours(image):
 
 def common_vertex_triangle(vertex_triangles, common_vertex):
 	vertex_triangles_with_common = []
-	
+
 	for triangle in vertex_triangles:
 		vertex_triangles_with_common.append([triangle[0], triangle[1], common_vertex])
-	
+
 	return vertex_triangles_with_common
 
 def create_radiation(img, label):

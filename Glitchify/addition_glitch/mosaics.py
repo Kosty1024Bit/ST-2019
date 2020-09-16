@@ -108,6 +108,7 @@ def get_random_contoure(img):
 
 	return pts
 
+
 def texture_generator(contour, fp):
 	min_x, min_y, w, h = cv2.boundingRect(contour)
 	mos_img = mosaics_texture_img(w, h, 25, 25, 5, 5, fp)
@@ -116,19 +117,54 @@ def texture_generator(contour, fp):
 
 	return mos_img
 
+
+def get_test_texture_and_contoure(img, fp):
+
+	imgray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+	ret, thresh = cv2.threshold(imgray, 64, 255, 1 )
+	contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+	contours.sort(key = len)
+
+	patch_number = np.random.randint(1, 10+1)
+	print (patch_number)
+
+	texture_list = []
+	contours_out = []
+	count = 0
+	for contour in reversed(contours):
+		if count < patch_number:
+			count+=1
+			texture_list.append(texture_generator(contour, fp))
+			contours_out.append(contour)
+
+
+	return (texture_list, contours_out)
+
+
 def mosaics (img, label, fp, lo = 2, hi = 15):
 	pic = np.copy(img)
 
 	p_json_list = []
 
-	pts = get_random_contoure(img)
+# 	pts = get_random_contoure(img)
 
-	mos = texture_generator(pts, fp)
+# 	mos = texture_generator(pts, fp)
 
-	pic = contuer_filler(pic, pts, mos)
+# 	pic = contuer_filler(pic, pts, mos)
 
-	p_shapes = labelMe_class.Shapes(label, np_array_to_list_int_points(pts), None, "polygon", {})
-	p_json_list.append(p_shapes)
+# 	p_shapes = labelMe_class.Shapes(label, np_array_to_list_int_points(pts), None, "polygon", {})
+# 	p_json_list.append(p_shapes)
+
+
+	(texture_list, contours) = get_test_texture_and_contoure(img, 1-fp)
+	for i in range(len(contours)):
+
+		pic = contuer_filler(pic, contours[i], texture_list[i])
+
+		p_shapes = labelMe_class.Shapes(label, contur_to_list_int_points(contours[i]), None, "polygon", {})
+		p_json_list.append(p_shapes)
 
 	res = RetClass(pic, p_json_list)
 	return res
