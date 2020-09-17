@@ -545,7 +545,7 @@ if __name__ == '__main__':
 			if options.glitch_type == "snowflakes":
 				new_list = create_snowflakes(img, "5")
 
-				output_name = str(count) + "_" + str(time.time()) + "snowflakes"
+				output_name = str(count) + "_" + str(time.time()) + "_snowflakes"
 
 ############################################################################################
 
