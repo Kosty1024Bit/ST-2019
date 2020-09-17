@@ -60,6 +60,10 @@ def get_triangles(width, height):
         #vertex_triangle_c = np.array((np.random.randint(width * 0.2, width * 0.8), np.random.randint(height * 0.2, height * 0.8)))
         deviation = np.random.rand() - 0.5
         vertex_triangle_c = common_vertex + np.array((R * np.cos(phi + deviation), R * np.sin(phi + deviation)))
+        if vertex_triangle_c[0] < width * 0.1: vertex_triangle_c[0] = width * 0.1
+        if vertex_triangle_c[0] > width * 0.9: vertex_triangle_c[0] = width * 0.0
+        if vertex_triangle_c[1] < height * 0.1: vertex_triangle_c[1] = height * 0.1
+        if vertex_triangle_c[1] > height * 0.9: vertex_triangle_c[1] = height * 0.9
 
         vector = np.float32(vertex_triangle_c - common_vertex)
         vector = vector / np.max(np.abs(vector))
