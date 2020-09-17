@@ -46,43 +46,41 @@ def get_away_points(width, height):
 def get_triangles(width, height):
     #width = image.shape[1]
     #height = image.shape[0]
-    size_triangles = 20
+    size_triangles = 15
     H_size_triangles = 20
-    
+
     mask_triangles = np.zeros(shape = (height, width)).astype(np.uint8)
     num_triangle = np.random.randint(1, 5)
     vertex_triangles = np.empty(shape = (0, 3, 2)).astype(np.int32)
-    
+
     common_vertex, common_triangles = get_away_points(width, height)
     R, phi = cart2pol(common_triangles[0] - common_vertex[0], common_triangles[1] - common_vertex[1])
-    
+
     for i in range(num_triangle):
         #vertex_triangle_c = np.array((np.random.randint(width * 0.2, width * 0.8), np.random.randint(height * 0.2, height * 0.8)))
         deviation = np.random.rand() - 0.5
         vertex_triangle_c = common_vertex + np.array((R * np.cos(phi + deviation), R * np.sin(phi + deviation)))
-        
+
         vector = np.float32(vertex_triangle_c - common_vertex)
         vector = vector / np.max(np.abs(vector))
-        
+
         H = vertex_triangle_c + np.int32(vector * H_size_triangles)
-        
-        rand_size = np.random.random()
+
+        rand_size = np.random.random() + 0.5
         vertex_triangle_a = H + np.int32(vector[::-1] * (size_triangles * rand_size, -size_triangles * rand_size))
         vertex_triangle_b = H - np.int32(vector[::-1] * (size_triangles * rand_size, -size_triangles * rand_size))
-        
+
         p = np.array((vertex_triangle_a, vertex_triangle_b, vertex_triangle_c)).astype(np.int32)
         vertex_triangles = np.append(vertex_triangles, [p], axis = 0)
-        
+
         mask_triangles = cv2.fillConvexPoly(mask_triangles, points = p, color = 255)
         mask_triangles[common_vertex[1], common_vertex[0]] = 255
         #mask_triangles[common_triangles[1], common_triangles[0]] = 255
-        
+
     return mask_triangles.astype(np.uint8), vertex_triangles, common_vertex
 
 
 def radiation(image, vertex_triangles, common_vertex):
-	width = image.shape[1]
-	height = image.shape[0]
 
 	warp_image = image.copy()
 
@@ -133,8 +131,14 @@ def create_radiation(img, label):
 	#vertex_triangles_with_common = common_vertex_triangle(vertex_triangles, common_vertex)
 
 	for triangle in contours:
-		p_shapes = labelMe_class.Shapes(label, contur_to_list_int_points(triangle), None, "polygon", {})
-		p_json_list.append(p_shapes)
+# 	поиск контуров генерит одинокие точки
+# 		if cv2.contourArea(triangle) > 5:
+			p_shapes = labelMe_class.Shapes(label, contur_to_list_int_points(triangle), None, "polygon", {})
+			p_json_list.append(p_shapes)
+# 		else:
+# 			p_shapes = labelMe_class.Shapes("0", contur_to_list_int_points(triangle), None, "polygon", {})
+# 			p_json_list.append(p_shapes)
+
 
 	res = RetClass(warp_img, p_json_list)
 	return res
