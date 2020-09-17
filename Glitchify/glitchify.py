@@ -5,6 +5,7 @@ import argparse
 from desktop_glitch.desktop_glitch_one import *
 from desktop_glitch.desktop_glitch_two import create_desktop_glitch_two
 from desktop_glitch.radiation import create_radiation
+from desktop_glitch.snowflakes import create_snowflakes
 import ou_glitch.ou_glitch as og
 from stuttering.stuttering import produce_stuttering
 from line_pixelation.line_pixelation import line_pixelation
@@ -538,6 +539,13 @@ if __name__ == '__main__':
 				new_list = create_radiation(img, "8")
 
 				output_name = str(count) + "_" + str(time.time()) + "_radiation"
+
+############################################################################################
+
+			if options.glitch_type == "snowflakes":
+				new_list = create_snowflakes(img, "5")
+
+				output_name = str(count) + "_" + str(time.time()) + "snowflakes"
 
 ############################################################################################
 
